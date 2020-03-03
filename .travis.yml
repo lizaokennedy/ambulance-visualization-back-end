@@ -1,7 +1,10 @@
+language: python
 python:
-  - "2.7"
-  - "3.7"
-install:
-  - pip install -r requirements.txt
+  - 3.8
+
+cache:
+  directories:
+    - __pycache__
+    - env
 script:
-  - python -m unittest discover
+  - python3.8 -m unittest discover
