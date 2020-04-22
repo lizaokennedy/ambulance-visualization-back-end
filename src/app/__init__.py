@@ -15,5 +15,6 @@ CORS(app, resources={r"/api/*": {"origins": ["http://localhost:8081"]}})
 
 from app.model import setup
 from app import views
+from app import model
 
 setup(app)
