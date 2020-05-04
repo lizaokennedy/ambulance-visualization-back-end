@@ -6,11 +6,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import *
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:docker@localhost:5432/postgres'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# db = SQLAlchemy(app)
-# migrate = Migrate(app, db)
+app.config.from_pyfile('../dev_settings.py')
 CORS(app, resources={r"/api/*": {"origins": ["http://localhost:8081"]}})
 
 from app.model import setup

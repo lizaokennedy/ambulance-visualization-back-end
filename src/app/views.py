@@ -1,12 +1,16 @@
 from flask.json import jsonify
 from flask import request
 from app import app
-from app.abstractions import create_simulation, get_all_sims
-from app.tigerdb import get_shortest_path
+from app.abstractions import create_simulation, get_all_sims, updateFrequency
+from app.tigerdb import get_shortest_path, get_all_resources
 
 
 @app.route("/api")
 def testAPI():
+    print("Start")
+    get_all_resources()
+    print("End")
+
     return 'This is the home page'
 
 

@@ -1,8 +1,25 @@
 from flask import Flask
 from app import app
-from app.model import db, Simulation
+from app.model import db, Simulation, RoadSegment
 from flask.json import jsonify
 import json
+from sqlalchemy import func, and_
+
+
+def exists(fromNode, toNode):
+    exists = db.session.query(RoadSegment).filter(and_(RoadSegment.fromNode == fromNode, RoadSegment.toNode == toNode))
+    # length = db.session.query(RoadSegment).count()
+    occurences = exists.count()
+    if (occurences > 0):
+        return True
+    else:
+        return False
+     
+def updateFrequency(fromNode, toNode):
+    segment = db.session.query(RoadSegment).filter(and_(RoadSegment.fromNode == fromNode, RoadSegment.toNode == toNode)).first()
+    segment.frequency += 1
+    db.session.commit()
+    return segment
 
 
 def create_simulation(start, end, year, status):
