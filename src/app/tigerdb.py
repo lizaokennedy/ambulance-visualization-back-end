@@ -6,7 +6,7 @@ import json
 
 
 def get_shortest_path(start, end, maxD):
-    URL = "http://172.22.0.2:9000/query/MyGraph/ShortestPath"
+    URL = "	http://172.22.0.2:9000/query/MyGraph/ShortestPath"
     r = requests.get(url=URL, params={"S": start, "T": end, "maxDepth": maxD})
     results = json.loads(r.text)["results"]
     path = results[0]['StartSet'][0]['attributes']["StartSet.@pathResults"][0]
@@ -73,15 +73,15 @@ def createRoadSegments(pathNodes):
 
 def getPathNodes(id):
     roadNodes = getStartAndEndNodes(id)
-    source = roadNodes[0]["S"][0]['v_id']
-    destination = roadNodes[0]["E"][0]['v_id']
+    source = roadNodes[0]["source"][0]['v_id']
+    destination = roadNodes[1]["dest"][0]['v_id']
     path = get_shortest_path(source, destination, 1000)
     pathNodes = path.split("-")
     pathNodes.pop(len(pathNodes) - 1)
     return pathNodes
 
 def getStartAndEndNodes(resource):
-    URL = "http://172.22.0.2:9000/query/MyGraph/getStartAndEndNodes"
+    URL = "http://172.22.0.2:9000/query/MyGraph/StartAndEndNodes"
     r = requests.get(url=URL, params={"R": resource})
     results = json.loads(r.text)["results"]
     return results
