@@ -6,21 +6,24 @@ import json
 
 
 def get_shortest_path(start, end, maxD):
-    URL = "	http://172.22.0.2:9000/query/MyGraph/ShortestPath"
+    URL = "http://172.22.0.2:9000/query/MyGraph/ShortestPath"
     r = requests.get(url=URL, params={"S": start, "T": end, "maxDepth": maxD})
     results = json.loads(r.text)["results"]
-    path = results[0]['StartSet'][0]['attributes']["StartSet.@pathResults"][0]
-    return path
+    if len(results[0]['StartSet']) > 0:
+        path = results[0]['StartSet'][0]['attributes']["StartSet.@pathResults"][0]
+        return path
+    else:
+        return start + "-" + end
 
 
 def get_all_resources():
+    count = 0
     URL = "http://172.22.0.2:9000/graph/MyGraph/vertices/Resource"
     r = requests.get(url=URL)
     results = json.loads(r.text)["results"]
-    print(results)
     # todo Process start and end time data (get from TG) && organize version data of sim
     for result in results:
-        print(result["attributes"]["id"])
+        print("Progress: " + str(round(count/len(results)*100)) + "%")
         pathNodes = getPathNodes(result["attributes"]["id"])
         createRoadSegments(pathNodes)
 
@@ -29,7 +32,7 @@ def get_all_resources():
         db.session.commit()
 
         start = result["attributes"]["ResponseCallTime"]
-        end = start + result["attributes"]["AmbulanceStartTime"] + result["attributes"]["OnSceneDuration"] + result["attributes"]["TimeAtHospital"] + \
+        end = start + result["attributes"]["StartTime"] + result["attributes"]["OnSceneDuration"] + result["attributes"]["TimeAtHospital"] + \
             result["attributes"]["TravelTimePatient"] + \
             result["attributes"]["TravelTimeHospital"] + \
             result["attributes"]["TravelTimeStation"]
@@ -37,6 +40,7 @@ def get_all_resources():
         response = Response(path.id, start, end, 1)
         db.session.add(response)
         db.session.commit()
+        count = count + 1
 
 
 
@@ -78,10 +82,13 @@ def getPathNodes(id):
     path = get_shortest_path(source, destination, 1000)
     pathNodes = path.split("-")
     pathNodes.pop(len(pathNodes) - 1)
+
     return pathNodes
 
 def getStartAndEndNodes(resource):
+    results = ""
     URL = "http://172.22.0.2:9000/query/MyGraph/StartAndEndNodes"
     r = requests.get(url=URL, params={"R": resource})
     results = json.loads(r.text)["results"]
+    # print(json.loads(r.text)["results"])
     return results
