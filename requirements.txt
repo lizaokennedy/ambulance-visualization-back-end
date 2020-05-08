@@ -25,13 +25,10 @@ itsdangerous==1.1.0
 Jinja2==2.11.1
 jsonschema==3.2.0
 kiwisolver==1.1.0
-libxml2-python==2.9.10
 Mako==1.1.2
 MarkupSafe==1.1.1
-matplotlib==3.2.0
 numpy==1.18.3
 paramiko==2.7.1
-plotly==4.5.0
 psycopg2-binary==2.8.4
 pycparser==2.19
 pyparsing==2.4.6

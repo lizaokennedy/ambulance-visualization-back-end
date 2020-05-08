@@ -34,8 +34,8 @@ def get_all_sims():
     print(length)
     jsonSims = []
     for i in range(length):
-        jsonSims.append({"Simulation": {"id": sims[i].id, "sim_start": sims[i].sim_start,
-                                        "sim_end": sims[i].sim_end, "year": sims[i].year, "status": sims[i].status}})
+        jsonSims.append({"id": sims[i].id, "sim_start": sims[i].sim_start,
+                                        "sim_end": sims[i].sim_end, "year": sims[i].year, "status": sims[i].status})
 
     simulations = jsonify({"sims": jsonSims})
     return simulations

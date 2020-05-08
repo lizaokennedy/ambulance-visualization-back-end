@@ -1,17 +1,11 @@
-FROM python:3.8
-WORKDIR /src
-ENV FLASK_APP run.py
-ENV FLASK_RUN_HOST 0.0.0.0
-RUN apk add --no-cache gcc musl-dev linux-headers
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txtFROM python:3.7-alpine
-WORKDIR /code
-ENV FLASK_APP app.py
-ENV FLASK_RUN_HOST 0.0.0.0
-RUN apk add --no-cache gcc musl-dev linux-headers
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["flask", "run"]
-COPY . .
-CMD ["flask", "run"]
+FROM python:3.8-slim-buster
+# Copy project files and work in that directory
+COPY . /app
+WORKDIR /app
+# Install dependencies
+RUN pip3 install -r requirements.txt && \
+    pip3 install waitress
+# Set entrypoint as running the server. Waitress binds to 8080
+EXPOSE 8080
+ENTRYPOINT [ "python3" ]
+CMD [ "src/prod_serve.py" ]
