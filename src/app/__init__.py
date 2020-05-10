@@ -7,7 +7,7 @@ from sqlalchemy import *
 app = Flask(__name__)
 
 app.config.from_pyfile('../dev_settings.py')
-CORS(app, resources={r"/api/*": {"origins": ["http://localhost:8081"]}})
+CORS(app, resources={r"/api/*": {"origins": ["http://localhost:8080"]}})
 
 from app.model import setup
 from app import views

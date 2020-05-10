@@ -6,6 +6,6 @@ WORKDIR /app
 RUN pip3 install -r requirements.txt && \
     pip3 install waitress
 # Set entrypoint as running the server. Waitress binds to 8080
-EXPOSE 8080
+EXPOSE 5000
 ENTRYPOINT [ "python3" ]
-CMD [ "src/prod_serve.py" ]
+CMD [ "src/run.py" ]

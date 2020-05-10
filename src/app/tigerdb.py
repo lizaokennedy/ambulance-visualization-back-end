@@ -32,7 +32,7 @@ def get_all_resources():
         db.session.commit()
 
         start = result["attributes"]["ResponseCallTime"]
-        end = start + result["attributes"]["StartTime"] + result["attributes"]["OnSceneDuration"] + result["attributes"]["TimeAtHospital"] + \
+        end = start + result["attributes"]["AmbulanceStartTime"] + result["attributes"]["OnSceneDuration"] + result["attributes"]["TimeAtHospital"] + \
             result["attributes"]["TravelTimePatient"] + \
             result["attributes"]["TravelTimeHospital"] + \
             result["attributes"]["TravelTimeStation"]
@@ -47,7 +47,6 @@ def get_all_resources():
 def createRoadSegments(pathNodes):
     pathIDs = []
     
-#?, what if list is 2 long?
     for i in range(len(pathNodes) - 2):
         segment = RoadSegment(0,0,0)
         if (pathNodes[i] < pathNodes[i + 1]):

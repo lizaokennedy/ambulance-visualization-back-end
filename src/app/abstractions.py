@@ -39,3 +39,4 @@ def get_all_sims():
 
     simulations = jsonify({"sims": jsonSims})
     return simulations
+

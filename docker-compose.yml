@@ -7,4 +7,4 @@ services:
       SQLALCHEMY_TRACK_MODIFICATIONS: "False"
       SQLALCHEMY_DATABASE_URI: "0.0.0.0:5432"
     ports:
-      - "8080:8080"
+      - "5000:5000"

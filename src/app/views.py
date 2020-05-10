@@ -4,6 +4,10 @@ from app import app
 from app.abstractions import create_simulation, get_all_sims, updateFrequency
 from app.tigerdb import get_shortest_path, get_all_resources
 
+@app.route("/")
+def hello():
+    return "Welcome to The Ambu-Lenz API"
+
 @app.route("/api/getAllSimulations")
 def getAllSimulations():
     sims = get_all_sims()
@@ -18,6 +22,6 @@ def getShortestPath():
 
 @app.route("/api/loadData")
 def testAPI():
-    # get_all_resources()
+    get_all_resources()
     # get_shortest_path(1,5,10)
-    return 'This is the home page'
+    return 'Data Is Being Loaded Into Postgres'
