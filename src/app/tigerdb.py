@@ -1,7 +1,7 @@
 import requests
 from flask.json import jsonify
 from app.model import Response, db ,RoadSegment ,Path
-from app.abstractions import exists, updateFrequency
+from app.postgresdb import exists, updateFrequency
 import json
 
 
@@ -91,3 +91,14 @@ def getStartAndEndNodes(resource):
     results = json.loads(r.text)["results"]
     # print(json.loads(r.text)["results"])
     return results
+
+
+def getAllResponseCallTimes():
+    results = ""
+    URL = "http://172.22.0.2:9000/graph/MyGraph/vertices/Resource?select=ResponseCallTime"
+    r = requests.get(url=URL)
+    results = json.loads(r.text)["results"]
+    responseTimes = []
+    for i in range(len(results)):
+        responseTimes.append(results[i]['attributes']['ResponseCallTime'])
+    return responseTimes

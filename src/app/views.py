@@ -1,8 +1,9 @@
 from flask.json import jsonify
 from flask import request
 from app import app
-from app.abstractions import create_simulation, get_all_sims, updateFrequency
-from app.tigerdb import get_shortest_path, get_all_resources
+from app.postgresdb import create_simulation, get_all_sims, updateFrequency
+from app.tigerdb import get_shortest_path, get_all_resources,getAllResponseCallTimes
+from app.functions import get_reposnses_per_week
 
 @app.route("/")
 def hello():
@@ -21,7 +22,10 @@ def getShortestPath():
     return get_shortest_path(startVertex, endVertex, max_depth)
 
 @app.route("/api/loadData")
-def testAPI():
+def loadData():
     get_all_resources()
-    # get_shortest_path(1,5,10)
     return 'Data Is Being Loaded Into Postgres'
+
+@app.route("/api/getResponseCalls")
+def responseCalls():
+    return get_reposnses_per_week()
