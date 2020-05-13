@@ -1,4 +1,5 @@
 import requests
+from math import floor
 from flask.json import jsonify
 from app.model import Response, db ,RoadSegment ,Path
 from app.postgresdb import exists, updateFrequency
@@ -24,8 +25,8 @@ def get_all_resources():
     # todo Process start and end time data (get from TG) && organize version data of sim
     for result in results:
         print("Progress: " + str(round(count/len(results)*100)) + "%")
-        pathNodes = getPathNodes(result["attributes"]["id"])
-        createRoadSegments(pathNodes)
+        pathNodes = get_path_nodes(result["attributes"]["id"])
+        create_road_segments(pathNodes)
 
         path = Path(pathNodes)
         db.session.add(path)
@@ -44,7 +45,7 @@ def get_all_resources():
 
 
 
-def createRoadSegments(pathNodes):
+def create_road_segments(pathNodes):
     pathIDs = []
     
     for i in range(len(pathNodes) - 2):
@@ -74,8 +75,8 @@ def createRoadSegments(pathNodes):
         pathIDs.append(segment.id)
     return pathIDs
 
-def getPathNodes(id):
-    roadNodes = getStartAndEndNodes(id)
+def get_path_nodes(id):
+    roadNodes = get_start_and_end_nodes(id)
     source = roadNodes[0]["source"][0]['v_id']
     destination = roadNodes[1]["dest"][0]['v_id']
     path = get_shortest_path(source, destination, 1000)
@@ -84,7 +85,7 @@ def getPathNodes(id):
 
     return pathNodes
 
-def getStartAndEndNodes(resource):
+def get_start_and_end_nodes(resource):
     results = ""
     URL = "http://172.22.0.2:9000/query/MyGraph/StartAndEndNodes"
     r = requests.get(url=URL, params={"R": resource})
@@ -93,7 +94,7 @@ def getStartAndEndNodes(resource):
     return results
 
 
-def getAllResponseCallTimes():
+def get_all_response_call_times():
     results = ""
     URL = "http://172.22.0.2:9000/graph/MyGraph/vertices/Resource?select=ResponseCallTime"
     r = requests.get(url=URL)
@@ -102,3 +103,31 @@ def getAllResponseCallTimes():
     for i in range(len(results)):
         responseTimes.append(results[i]['attributes']['ResponseCallTime'])
     return responseTimes
+
+def get_num_responses():
+    URL = "http://172.22.0.2:9000/graph/MyGraph/vertices/Resource"
+    r = requests.get(url=URL, params={"count_only": "true"})
+    results = json.loads(r.text)["results"][0]["count"]
+    return str(results)
+
+def get_num_transfers():
+    URL = "http://172.22.0.2:9000/graph/MyGraph/vertices/Resource"
+    r = requests.get(url=URL, params={"filter": "Transfer=1", "count_only": "true"})
+    results = json.loads(r.text)["results"][0]["count"]
+    return str(results)
+
+def get_avg_response_time():
+    URL = "http://172.22.0.2:9000/graph/MyGraph/vertices/Resource"
+    r = requests.get(url=URL, params={"select": "AmbulanceStartTime"})
+    results = json.loads(r.text)["results"]
+    accum = 0
+    for i in range(len(results)):
+        accum += results[i]["attributes"]["AmbulanceStartTime"]
+    
+    time = (accum/len(results))/60 #8.1234533
+    mins = floor(time) #8
+    seconds = round((time - mins) * 60)
+    if seconds < 10:
+        seconds = "0" + str(seconds)
+    returnTime = str(mins) + ":" + str(seconds)
+    return returnTime

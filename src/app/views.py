@@ -2,7 +2,7 @@ from flask.json import jsonify
 from flask import request
 from app import app
 from app.postgresdb import create_simulation, get_all_sims, updateFrequency
-from app.tigerdb import get_shortest_path, get_all_resources,getAllResponseCallTimes
+from app.tigerdb import get_shortest_path, get_all_resources, get_num_responses,get_num_transfers, get_avg_response_time
 from app.functions import get_reposnses_per_week
 
 @app.route("/")
@@ -29,3 +29,15 @@ def loadData():
 @app.route("/api/getResponseCalls")
 def responseCalls():
     return get_reposnses_per_week()
+
+@app.route("/api/getNumResponses")
+def getNumResponses():
+    return get_num_responses()
+
+@app.route("/api/getNumTransfers")
+def getNumTransfers():
+    return get_num_transfers()
+
+@app.route("/api/getAvgResponseTime")
+def getAvgResponseTime():
+    return get_avg_response_time()

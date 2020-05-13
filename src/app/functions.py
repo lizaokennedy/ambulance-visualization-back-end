@@ -1,11 +1,11 @@
 import requests
 from flask.json import jsonify
 from app.model import Response, db ,RoadSegment ,Path
-from app.tigerdb import getAllResponseCallTimes
+from app.tigerdb import get_all_response_call_times
 import json
 
 def get_reposnses_per_week():
-    responses = getAllResponseCallTimes()
+    responses = get_all_response_call_times()
     offset = get_offset(responses)
     weekCounts = [0] * 52
     for time in responses:
