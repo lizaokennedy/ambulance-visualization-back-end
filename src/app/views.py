@@ -4,6 +4,7 @@ from app import app
 from app.postgresdb import create_simulation, get_all_sims, updateFrequency
 from app.tigerdb import get_shortest_path, get_all_resources, get_num_responses,get_num_transfers, get_avg_response_time
 from app.functions import get_reposnses_per_week
+from app.sumo import run, save_controller, Controller
 
 @app.route("/")
 def hello():
@@ -41,3 +42,17 @@ def getNumTransfers():
 @app.route("/api/getAvgResponseTime")
 def getAvgResponseTime():
     return get_avg_response_time()
+
+
+@app.route("/api/runSimulation")
+def runSimulations():
+    run()
+    return "Success"
+
+@app.route("/api/saveSettings", methods=['POST'])
+def saveSettings():
+    data = request.json
+    c = Controller()
+    c.parse_data(data)
+    save_controller(c)
+    return "Success"
