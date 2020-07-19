@@ -3,15 +3,13 @@ class Ambulance:
     ambuID = 0
     src = 0
     dest = 0 
-    emergencyID = 0
     depotID = 0
     returning = False
     
-    def __init__(self, ambuID, src, dest, emergencyID, depotID):
+    def __init__(self, ambuID, src, dest, depotID):
         self.ambuID = ambuID
-        self.src = src
-        self.dest = dest
-        self.emergencyID = emergencyID
+        self.src = str(src)
+        self.dest = str(dest)
         self.depotID = depotID
         self.returning = False
 

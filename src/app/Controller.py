@@ -11,7 +11,7 @@ class Controller:
     emergencies_to_process = 0
 
 
-    def parse_data(self, data):  
+    def parse_data(self, data, randomGeneration=False):  
         data = {
             "emergency": [
             { "time": 13, "long": -33.814488, "lat": 18.479524 },
@@ -35,13 +35,16 @@ class Controller:
             { "long": -33.814518, "lat": 18.486162, "ambulances": 1 }
             ]
         }
-        counter = 0
-        for e in data['emergency']:
-            newEm = Emergency(counter, e["long"], e["lat"], e["time"])
-            self.emergencies.append(newEm)
-            counter += 1
 
-        self.emergencies_to_process = counter + 1
+        if not randomGeneration:
+            counter = 0
+            for e in data['emergency']:
+                newEm = Emergency(counter, e["long"], e["lat"], e["time"])
+                self.emergencies.append(newEm)
+                counter += 1
+
+            self.emergencies_to_process = counter + 1
+            self.emergencies = sorted(self.emergencies, key=lambda x: x.time)
 
         counter = 0
         for h in data['hospital']: 
@@ -49,5 +52,4 @@ class Controller:
             self.depots.append(newH)
             counter += 1
 
-        self.emergencies = sorted(self.emergencies, key=lambda x: x.time)
 
