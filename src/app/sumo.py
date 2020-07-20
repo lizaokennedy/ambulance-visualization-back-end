@@ -75,8 +75,8 @@ def generate_emergency(i):
             depotID, minDist = get_depot(e)
         
         success = add_emergency(c.depots[depotID].edgeID, emergency_edgeID, depotID)
-        c.emergencies_to_process += 1
-        print(str(c.emergencies_to_process) + " - Added")
+    c.emergencies_to_process += 1
+    print(str(c.emergencies_to_process) + " - Added")
     # print("Added Emergency #" + str(emergency) + " @ " + str(traci.simulation.getTime()))
     i += 1
     return i
@@ -86,9 +86,13 @@ def get_edge_random():
     return choice(edges)
 
 def stop(randomGeneration=True):
+    global prob
     if randomGeneration:
-        if c.stop_time < traci.simulation.getTime() and c.emergencies_to_process <= 0:
-            return True
+        # if c.stop_time <= traci.simulation.getTime() and c.emergencies_to_process <= 0:
+        if c.stop_time <= traci.simulation.getTime():
+            prob = 0
+            if(c.emergencies_to_process <= 0):
+                return True
     else:
         if (c.emergencies_to_process <= 0):
             return True
@@ -105,10 +109,10 @@ def add_emergency(e1, e2, depotID):
         traci.route.add("eResponse" + str(emergency), [e1, e2])
         traci.vehicle.add("ambulance" + str(emergency), "eResponse" + str(emergency), typeID="emergency")
         traci.vehicle.setStop("ambulance" + str(emergency), e2, duration=1, pos=0.1)
+        print("SUCCESS")
     except (ex.TraCIException, ex.FatalTraCIError):
         traci.vehicle.remove("ambulance" + str(emergency))
-        # print("Err: Stop")
-        
+        print("ERROR")
         return False
 
     print("Adding " + str(emergency))
@@ -206,6 +210,7 @@ def handle_arrival_emergency(ambu):
                 traci.vehicle.changeTarget(name, ambu.src)
             except:
                 #?route to a nearby edge that will work?
+                print("handle_arrival_emergency")
                 return
             ambu.returning = True
             
@@ -237,5 +242,5 @@ net = sumolib.net.readNet(os.path.abspath('app/data/blou.net.xml'))
 step = 0
 emergency = 0
 c = Controller
-prob = 0.001
+prob = 0.0009
 
