@@ -53,7 +53,7 @@ def runSimulations():
 def saveSettings():
     data = request.json
     c = Controller()
-    c.parse_data(data, True)
-    save_controller(c, True)
+    c.parse_data(data)
+    save_controller(c)
     return "Success"
 

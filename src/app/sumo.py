@@ -3,6 +3,7 @@ from sumolib import checkBinary
 import sumolib
 import os, json, sys, math, optparse
 import traci.constants as tc
+import traci.exceptions as ex
 from random import random, choice
 from app.Controller import Controller
 from app.Ambulance import Ambulance 
@@ -16,14 +17,14 @@ def get_options():
     options, args = opt_parser.parse_args()
     return options
 
-def run(randomGeneration=False):
+def run(randomGeneration=True):
     global step, c, prob
     step = 0
     i = 0
     sumoBinary = checkBinary('sumo')
     traci.start([sumoBinary, "-c", "app/data/blou.sumocfg", "--tripinfo-output", "app/data/tripinfo.xml"])
 
-    while (not all_emergencies_processed() > 0 or traci.simulation.getMinExpectedNumber() > 0):
+    while (not stop() or traci.simulation.getMinExpectedNumber() > 0):
         traci.simulationStep()
         check_for_arrivals()
         if randomGeneration :
@@ -36,7 +37,7 @@ def run(randomGeneration=False):
     traci.close()
     sys.stdout.flush()
 
-def save_controller(controller, randomGeneration=False):
+def save_controller(controller, randomGeneration=True):
     global c
     c = controller
     if (not randomGeneration):
@@ -72,11 +73,11 @@ def generate_emergency(i):
             e = Emergency(emergency)
             e.set_edge(emergency_edgeID)
             depotID, minDist = get_depot(e)
-            print(emergency_edgeID, c.depots[depotID].edgeID)
         
-        print("Adding Emergency #" + str(emergency) + " @ " + str(traci.simulation.getTime()))
         success = add_emergency(c.depots[depotID].edgeID, emergency_edgeID, depotID)
-        print(success)
+        c.emergencies_to_process += 1
+        print(str(c.emergencies_to_process) + " - Added")
+    # print("Added Emergency #" + str(emergency) + " @ " + str(traci.simulation.getTime()))
     i += 1
     return i
 
@@ -84,26 +85,34 @@ def get_edge_random():
     edges = traci.edge.getIDList()
     return choice(edges)
 
-def all_emergencies_processed():
-    if (c.emergencies_to_process > 0):
-        return False
+def stop(randomGeneration=True):
+    if randomGeneration:
+        if c.stop_time < traci.simulation.getTime() and c.emergencies_to_process <= 0:
+            return True
     else:
-        return True
+        if (c.emergencies_to_process <= 0):
+            return True
+
+    return False
 
 def add_emergency(e1, e2, depotID):
     global emergency, c
     if e1 == -1 or e2 == -1:
         return False
+
+    emergency += 1
     try:
         traci.route.add("eResponse" + str(emergency), [e1, e2])
         traci.vehicle.add("ambulance" + str(emergency), "eResponse" + str(emergency), typeID="emergency")
         traci.vehicle.setStop("ambulance" + str(emergency), e2, duration=1, pos=0.1)
-    except:
-        print("Could not add route, vehicle or stop")
+    except (ex.TraCIException, ex.FatalTraCIError):
+        traci.vehicle.remove("ambulance" + str(emergency))
+        # print("Err: Stop")
+        
         return False
 
+    print("Adding " + str(emergency))
     add_ambulance(emergency, e1, e2, depotID)
-    emergency += 1
     return True
 
 def get_edge_geo(long, lat):
@@ -193,7 +202,11 @@ def handle_arrival_emergency(ambu):
     if len(arrived) > 0:
         name = "ambulance" + str(ambu.ambuID)
         if name in arrived:
-            traci.vehicle.changeTarget(name, ambu.src)
+            try:
+                traci.vehicle.changeTarget(name, ambu.src)
+            except:
+                #?route to a nearby edge that will work?
+                return
             ambu.returning = True
             
 
