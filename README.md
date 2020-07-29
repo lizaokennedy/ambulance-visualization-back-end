@@ -10,3 +10,14 @@ docker start pg-docker
 ```
 
 PGadmin passowrd: docker
+
+Login to pg-docker container
+
+```
+docker exec -it pg-docker /bin/bash
+```
+
+Login to psql
+```
+psql "dbname=postgres host=localhost user=postgres password=docker port=5432"
+```

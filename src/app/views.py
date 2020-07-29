@@ -5,6 +5,7 @@ from app.postgresdb import create_simulation, get_all_sims, updateFrequency
 from app.tigerdb import get_shortest_path, get_all_resources, get_num_responses,get_num_transfers, get_avg_response_time
 from app.functions import get_reposnses_per_week
 from app.sumo import run, save_controller, Controller
+from app.test import sort_output
 
 @app.route("/")
 def hello():
@@ -55,5 +56,10 @@ def saveSettings():
     c = Controller()
     c.parse_data(data)
     save_controller(c)
+    return "Success"
+
+@app.route("/api/BITCH-ASS-MOTHER-FUCKER")
+def fuckoff():
+    sort_output()
     return "Success"
 

@@ -4,11 +4,13 @@ import sumolib
 import os, json, sys, math, optparse
 import traci.constants as tc
 import traci.exceptions as ex
+import xml.etree.ElementTree as et
 from random import random, choice
 from app.Controller import Controller
 from app.Ambulance import Ambulance 
 from app.Emergency import Emergency
 from app.Depot import Depot
+from app.postgresdb import create_simulation, complete_simulation
 
 
 def get_options():
@@ -18,7 +20,8 @@ def get_options():
     return options
 
 def run(randomGeneration=True):
-    global step, c, prob
+    global step, c
+    simId = create_simulation(0, c.stop_time, 2020, "Running")
     step = 0
     i = 0
     sumoBinary = checkBinary('sumo')
@@ -28,12 +31,13 @@ def run(randomGeneration=True):
         traci.simulationStep()
         check_for_arrivals()
         if randomGeneration :
-            if random() < prob:
+            if random() < c.prob:
                 i = generate_emergency(i)
         else:
             i = process_emergency(i, step)
         step += 1
 
+    complete_simulation(simId)
     traci.close()
     sys.stdout.flush()
 
@@ -86,11 +90,10 @@ def get_edge_random():
     return choice(edges)
 
 def stop(randomGeneration=True):
-    global prob
     if randomGeneration:
         # if c.stop_time <= traci.simulation.getTime() and c.emergencies_to_process <= 0:
         if c.stop_time <= traci.simulation.getTime():
-            prob = 0
+            c.prob = 0
             if(c.emergencies_to_process <= 0):
                 return True
     else:
@@ -109,7 +112,6 @@ def add_emergency(e1, e2, depotID):
         traci.route.add("eResponse" + str(emergency), [e1, e2])
         traci.vehicle.add("ambulance" + str(emergency), "eResponse" + str(emergency), typeID="emergency")
         traci.vehicle.setStop("ambulance" + str(emergency), e2, duration=1, pos=0.1)
-        print("SUCCESS")
     except (ex.TraCIException, ex.FatalTraCIError):
         traci.vehicle.remove("ambulance" + str(emergency))
         print("ERROR")
@@ -213,6 +215,11 @@ def handle_arrival_emergency(ambu):
                 print("handle_arrival_emergency")
                 return
             ambu.returning = True
+
+def sort_output():
+    out = et.parse("app/data/tripinfo.xml")
+    root = out.getroot()
+    print(root[0])
             
 
 if __name__ == '__main__':
@@ -242,5 +249,4 @@ net = sumolib.net.readNet(os.path.abspath('app/data/blou.net.xml'))
 step = 0
 emergency = 0
 c = Controller
-prob = 0.0009
 

@@ -10,12 +10,11 @@ class Controller:
     waiting = []
     emergencies_to_process = 0
     stop_time = 0
+    prob = 0
 
 
-    def parse_data(self, data, randomGeneration=True, stop_time=2000):  
-        data = self.get_dummy_data()
-        self.stop_time = stop_time
 
+    def parse_data(self, data, randomGeneration=True):  
         if not randomGeneration:
             counter = 0
             for e in data['emergency']:
@@ -27,10 +26,15 @@ class Controller:
             self.emergencies = sorted(self.emergencies, key=lambda x: x.time)
 
         counter = 0
-        for h in data['hospital']: 
-            newH = Depot(counter, h["long"], h["lat"], h["ambulances"])
+        for h in data['depots']: 
+            newH = Depot(counter, h["coordinate"][1], h["coordinate"][0], int(h["ambulances"]))
             self.depots.append(newH)
             counter += 1
+        
+        self.stop_time = int(data['time'])
+        self.prob = int(data['avgEmergencies'])/24/60/60
+        
+        
 
     def get_dummy_data(self):
         return {

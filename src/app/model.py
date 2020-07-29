@@ -50,18 +50,22 @@ class Response(db.Model):
     __tablename__ = 'Response'
 
     id = db.Column('id', db.Integer, primary_key=True)
-    path = db.Column('Path', db.Integer, primary_key=False)
     timeStart = db.Column('TimeStart', db.Float, primary_key=False)
     timeEnd = db.Column('TimeEnd', db.Float, primary_key=False)
     version = db.Column('Version', db.Integer, primary_key=False)
+    duration = db.Column('Duration', db.Float, primary_key=False)
+    length = db.Column('Length', db.Float, primary_key=False)
 
-    def __init__(self, path, timeStart, timeEnd, version):
+
+    def __init__(self, path, timeStart, timeEnd, duration, length, version):
         self.path = path
         self.timeStart = timeStart
         self.timeEnd = timeEnd
         self.version = version
+        self.duration = duration
+        self.length = length
 
-    def __repr__(self, path, timeStart, timeEnd, version):
+    def __repr__(self, path, timeStart, timeEnd, duration, length, version):
         return f"<Response {self.timeStart}>"
 
 
