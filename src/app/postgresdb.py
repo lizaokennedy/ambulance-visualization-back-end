@@ -4,6 +4,16 @@ from app.model import db, Simulation, RoadSegment, Response
 from flask.json import jsonify
 import json
 from sqlalchemy import func, and_
+import xml.etree.ElementTree as et
+
+
+def sort_output(simID):
+    out = et.parse("app/data/tripinfo.xml")
+    root = out.getroot()
+    for child in root.findall('tripinfo'):
+        if "ambulance" in child.attrib['id']:
+            create_response(child.attrib['depart'], child.attrib['arrival'], child.attrib['duration'], child.attrib['routeLength'], simID)
+            # print(child.attrib['depart'])
 
 
 def exists(fromNode, toNode):
@@ -33,24 +43,48 @@ def complete_simulation(simId):
     sim.status = "Done"
     db.session.commit()
 
-def create_response(timeStart, timeEnd, duration, length, version=0, path=0):
+def create_response(timeStart, timeEnd, duration, length, version, path=0):
     r = Response(path, timeStart, timeEnd, duration, length, version)
     db.session.add(r)
     db.session.commit()
 
 def get_all_sims():
-    # s = Simulation(sim_start=0, sim_end=5000, year=2020, status="Done")
-    # db.session.add(s)
-    # db.session.commit()
     sims = db.session.query(Simulation)
     length = db.session.query(Simulation).count()
-    print(length)
     jsonSims = []
     for i in range(length):
-        print(i, length)
         jsonSims.append({"id": sims[i].id, "sim_start": sims[i].sim_start,
                                         "sim_end": sims[i].sim_end, "year": sims[i].year, "status": sims[i].status})
 
     simulations = jsonify({"sims": jsonSims})
     return simulations
+
+def get_avg_response_time(simId=26):
+    responses = db.session.query(Response).filter(Response.version == simId)
+    total = 0
+    count = 0
+    for r in responses:
+        total += r.duration/2
+        count += 1
+    if total == 0 :
+        return str(0)
+    else:
+        return str(total/count/60)
+
+    
+def get_avg_distance(simId=26):
+    responses = db.session.query(Response).filter(Response.version == simId)
+    total = 0
+    count = 0
+    for r in responses:
+        total += r.length/2
+        count += 1
+    if total == 0 :
+        return str(0)
+    else:
+        return str(total/count/1000)
+
+def get_total_responses(simId=26):
+    total = db.session.query(Response).filter(Response.version == simId).count()
+    return str(total)
 

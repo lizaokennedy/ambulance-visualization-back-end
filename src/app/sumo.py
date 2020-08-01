@@ -20,7 +20,8 @@ def get_options():
     return options
 
 def run(randomGeneration=True):
-    global step, c
+    global step, c, activities
+    activities = ""
     simId = create_simulation(0, c.stop_time, 2020, "Running")
     step = 0
     i = 0
@@ -40,6 +41,7 @@ def run(randomGeneration=True):
     complete_simulation(simId)
     traci.close()
     sys.stdout.flush()
+    return simId, activities
 
 def save_controller(controller, randomGeneration=True):
     global c
@@ -103,7 +105,7 @@ def stop(randomGeneration=True):
     return False
 
 def add_emergency(e1, e2, depotID):
-    global emergency, c
+    global emergency, c, activities
     if e1 == -1 or e2 == -1:
         return False
 
@@ -112,6 +114,7 @@ def add_emergency(e1, e2, depotID):
         traci.route.add("eResponse" + str(emergency), [e1, e2])
         traci.vehicle.add("ambulance" + str(emergency), "eResponse" + str(emergency), typeID="emergency")
         traci.vehicle.setStop("ambulance" + str(emergency), e2, duration=1, pos=0.1)
+        activities += "Generated Ambulance:" + str(emergency) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
     except (ex.TraCIException, ex.FatalTraCIError):
         traci.vehicle.remove("ambulance" + str(emergency))
         print("ERROR")
@@ -182,12 +185,15 @@ def check_for_arrivals():
             handle_arrival_emergency(ambu)
 
 def handle_arrival_depot(ambu):
+    global activities
     arrived = traci.edge.getLastStepVehicleIDs(str(ambu.src))
     if len(arrived) > 0:
         name = "ambulance" + str(ambu.ambuID)
         if name in arrived:
             depot = c.depots[ambu.depotID]
             c.emergencies_to_process -= 1
+            activities += "Arrived at Depot: Ambulance:" + str(ambu.ambuID) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
+
             print(str(c.emergencies_to_process) + " - DEPOT (" + str(ambu.ambuID) + ")") 
 
             if len(c.waiting) > 0:
@@ -203,6 +209,7 @@ def handle_arrival_depot(ambu):
                 traci.vehicle.remove(name)
 
 def handle_arrival_emergency(ambu):
+    global activities
     name = "ambulance" + str(ambu.ambuID)
     arrived = traci.edge.getLastStepVehicleIDs(str(ambu.dest))
     if len(arrived) > 0:
@@ -210,6 +217,7 @@ def handle_arrival_emergency(ambu):
         if name in arrived:
             try:
                 traci.vehicle.changeTarget(name, ambu.src)
+                activities += "Arrived at Emergency: Ambulance:" + str(ambu.ambuID) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
             except:
                 #?route to a nearby edge that will work?
                 print("handle_arrival_emergency")
@@ -249,4 +257,6 @@ net = sumolib.net.readNet(os.path.abspath('app/data/blou.net.xml'))
 step = 0
 emergency = 0
 c = Controller
+activities = ""
+
 
