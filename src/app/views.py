@@ -51,7 +51,7 @@ def getAvgResponseTime():
 
 @app.route("/api/runSimulation")
 def runSimulations():
-    simID, activities = run(True)
+    simID, activities = run()
     sort_output(simID)
     print(activities)
     return str(simID)
@@ -59,9 +59,11 @@ def runSimulations():
 @app.route("/api/saveSettings", methods=['POST'])
 def saveSettings():
     data = request.json
+    print(data)
     c = Controller()
     c.parse_data(data)
     save_controller(c)
+    data = 0
     return "Success"
 
 

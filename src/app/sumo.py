@@ -28,12 +28,13 @@ def run(randomGeneration=True):
     sumoBinary = checkBinary('sumo')
     traci.start([sumoBinary, "-c", "app/data/blou.sumocfg", "--tripinfo-output", "app/data/tripinfo.xml"])
 
-    while (not stop() or traci.simulation.getMinExpectedNumber() > 0):
+    while (not stop()):
         traci.simulationStep()
         check_for_arrivals()
+
         if randomGeneration :
             if random() < c.prob:
-                i = generate_emergency(i)
+                generate_emergency()
         else:
             i = process_emergency(i, step)
         step += 1
@@ -41,6 +42,8 @@ def run(randomGeneration=True):
     complete_simulation(simId)
     traci.close()
     sys.stdout.flush()
+    c = Controller
+    step = 0
     return simId, activities
 
 def save_controller(controller, randomGeneration=True):
@@ -55,37 +58,46 @@ def save_controller(controller, randomGeneration=True):
         edge, x, y = get_edge_geo(d.long, d.lat)
         d.set_edge(edge.getID())
 
+# Used for when real data is parsed through
 def process_emergency(i, step):
+    global emergencyID
     while (i < len(c.emergencies) and step == c.emergencies[i].time):
         depotID, minDist = get_depot(c.emergencies[i])
         if minDist == -1:
             c.emergencies_to_process -= 1
-            print(str(c.emergencies_to_process) + " - INVALID (" + str(i) + ")")
+            print("\n" + str(c.emergencies_to_process) + " - INVALID (" + str(i) + ")")
             i += 1
         else:
-            print("Adding Emergency #" + str(emergency) + " @ " + str(c.emergencies[i].time))
             add_emergency(c.depots[depotID].edgeID, c.emergencies[i].edgeID, depotID)
             i += 1
     return i
 
 
-def generate_emergency(i):
-    global emergency
+def generate_emergency():
+    global emergencyID, activities
     success = False
-    while not success: 
-        minDist = -1
-        while minDist == -1:
-            emergency_edgeID = get_edge_random()
-            e = Emergency(emergency)
-            e.set_edge(emergency_edgeID)
-            depotID, minDist = get_depot(e)
-        
-        success = add_emergency(c.depots[depotID].edgeID, emergency_edgeID, depotID)
-    c.emergencies_to_process += 1
-    print(str(c.emergencies_to_process) + " - Added")
-    # print("Added Emergency #" + str(emergency) + " @ " + str(traci.simulation.getTime()))
-    i += 1
-    return i
+    if len(find_available_depot()) > 0:
+        while not success: 
+            minDist = -1
+            while minDist == -1:
+                emergency_edgeID = get_edge_random()
+                e = Emergency(emergencyID)
+                e.set_edge(emergency_edgeID)
+                depotID, minDist = get_depot(e)
+                emergencyID += 1
+                if minDist == 0 and depotID == 0:
+                    return 
+            success = add_emergency(c.depots[depotID].edgeID, emergency_edgeID, depotID)
+        c.emergencies_to_process += 1
+        print("\n" + str(c.emergencies_to_process) + " - Adding Successful!")
+        emergencyID += 1
+        return success
+    else:
+        # add to waiting list
+        print("\nNone available")
+        c.waiting += 1
+        activities += "Emergency added to waiting - " + str(c.waiting) + "\n"
+        return success
 
 def get_edge_random():
     edges = traci.edge.getIDList()
@@ -97,6 +109,7 @@ def stop(randomGeneration=True):
         if c.stop_time <= traci.simulation.getTime():
             c.prob = 0
             if(c.emergencies_to_process <= 0):
+                print(traci.simulation.getTime(), c.emergencies_to_process)
                 return True
     else:
         if (c.emergencies_to_process <= 0):
@@ -105,28 +118,28 @@ def stop(randomGeneration=True):
     return False
 
 def add_emergency(e1, e2, depotID):
-    global emergency, c, activities
+    global emergencyID, c, activities
     if e1 == -1 or e2 == -1:
         return False
 
-    emergency += 1
+    emergencyID += 1
     try:
-        traci.route.add("eResponse" + str(emergency), [e1, e2])
-        traci.vehicle.add("ambulance" + str(emergency), "eResponse" + str(emergency), typeID="emergency")
-        traci.vehicle.setStop("ambulance" + str(emergency), e2, duration=1, pos=0.1)
-        activities += "Generated Ambulance:" + str(emergency) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
+        traci.route.add("eResponse" + str(emergencyID), [e1, e2])
+        traci.vehicle.add("ambulance" + str(emergencyID), "eResponse" + str(emergencyID), typeID="emergency")
+        traci.vehicle.setStop("ambulance" + str(emergencyID), e2, duration=1, pos=0.1)
+        activities += "Generated Ambulance:" + str(emergencyID) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
     except (ex.TraCIException, ex.FatalTraCIError):
-        traci.vehicle.remove("ambulance" + str(emergency))
+        traci.vehicle.remove("ambulance" + str(emergencyID))
         print("ERROR")
         return False
 
-    print("Adding " + str(emergency))
-    add_ambulance(emergency, e1, e2, depotID)
+    print("Emergency Added - Adding Ambulance:  " + str(emergencyID))
+    add_ambulance(emergencyID, e1, e2, depotID)
     return True
 
 def get_edge_geo(long, lat):
     global net
-    radius = 100
+    radius = 1000
     x, y = net.convertLonLat2XY(lat, long)
     edges = net.getNeighboringEdges(x,y, radius)
     if len(edges) > 0:
@@ -137,18 +150,14 @@ def get_edge_geo(long, lat):
                 minDist = dist
                 selectedEdge = edge
         return selectedEdge, x, y
-    print("No close edges found")    
+    print("\nNo close edges found")    
     return -1
 
 def get_depot(emergency):
+    global activities
     available = find_available_depot()
-    if len(available) > 0:
-        depotID, minDist = find_closest(emergency)
-        return depotID, minDist
-    else:
-        print("None available")
-        c.waiting.append(emergency)
-        return -1, -1
+    depotID, minDist = find_closest(emergency, available)
+    return depotID, minDist
 
 def find_available_depot():
     available = []
@@ -157,12 +166,11 @@ def find_available_depot():
             available.append(depot)
     return available
 
-def find_closest(emergency):
+def find_closest(emergency, available):
     minDist = float("inf")
     depotID = 0
-    for depot in c.depots:
+    for depot in available:
         dist = traci.simulation.getDistanceRoad(depot.edgeID, 0.1, emergency.edgeID, 0.1, isDriving=True)
-        # dist = traci.simulation.getDistance2D(emergency.x, emergency.y, depot.x, depot.y,isDriving=True)
         if dist < minDist and dist > 0:
             minDist = dist 
             depotID = depot.depID
@@ -178,35 +186,37 @@ def add_ambulance(ambuID, src, dest, depotID):
     c.ambulances[a.ambuID] = a
 
 def check_for_arrivals():
+    global c, emergencyID, activities
+    pending = 0
     for key, ambu in c.ambulances.items():
         if (ambu.returning):
-            handle_arrival_depot(ambu)
+            pending = handle_arrival_depot(ambu)
         else:
             handle_arrival_emergency(ambu)
+
+    for i in range(pending):
+        activities += "Respond to waiting Emergency\n"
+        if generate_emergency():
+            c.waiting -= 1
+
+
 
 def handle_arrival_depot(ambu):
     global activities
     arrived = traci.edge.getLastStepVehicleIDs(str(ambu.src))
+    pending = 0
     if len(arrived) > 0:
         name = "ambulance" + str(ambu.ambuID)
         if name in arrived:
             depot = c.depots[ambu.depotID]
             c.emergencies_to_process -= 1
             activities += "Arrived at Depot: Ambulance:" + str(ambu.ambuID) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
+            if (c.waiting > 0):
+                pending += 1
 
-            print(str(c.emergencies_to_process) + " - DEPOT (" + str(ambu.ambuID) + ")") 
-
-            if len(c.waiting) > 0:
-                emergency = c.waiting[0]
-                dist = traci.simulation.getDistanceRoad(emergency.edgeID, depot.edgeID)
-                # dist = traci.simulation.getDistance2D(emergency.x, emergency.y, depot.x, depot.y,isDriving=True)
-                if dist > 0:
-                    depot.dispatch_ambulance()
-                    add_emergency(depot.edgeID, emergency.edgeID, depot.depID)
-                    c.waiting.pop(0)
-            else:
-                depot.receive_ambulance()
-                traci.vehicle.remove(name)
+            depot.receive_ambulance()
+            traci.vehicle.remove(name)
+    return pending
 
 def handle_arrival_emergency(ambu):
     global activities
@@ -219,8 +229,16 @@ def handle_arrival_emergency(ambu):
                 traci.vehicle.changeTarget(name, ambu.src)
                 activities += "Arrived at Emergency: Ambulance:" + str(ambu.ambuID) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
             except:
-                #?route to a nearby edge that will work?
-                print("handle_arrival_emergency")
+                #todo route to a nearby edge that will work? - apparently this happens when a route has already been defined...
+                global net
+                try:
+                    edges = net.edge.getConnections(ambu.dest)
+                    print(edges)
+                    print("handle_arrival_emergency")
+                    traci.vehicle.changeTarget(name, edges[0])
+                except:
+                    print(edges)
+                    print("Broke Again")
                 return
             ambu.returning = True
 
@@ -255,7 +273,7 @@ sumoBinary = os.path.join(os.environ['SUMO_HOME'], 'sumo')
 sumoCmd = [sumoBinary, "-c", "data/blou.sumocfg"]
 net = sumolib.net.readNet(os.path.abspath('app/data/blou.net.xml'))
 step = 0
-emergency = 0
+emergencyID = 0
 c = Controller
 activities = ""
 
