@@ -1,6 +1,6 @@
 from flask import Flask
 from app import app
-from app.model import db, Simulation, RoadSegment, Response
+from app.model import db, Simulation, RoadSegment, Response, HeatPoint
 from flask.json import jsonify
 import json
 from sqlalchemy import func, and_
@@ -38,6 +38,12 @@ def create_simulation(start, end, year, status):
     db.session.commit()
     return s.id
 
+def remove_simulation(ID):
+    sim = db.session.query(Simulation).filter(Simulation.id == ID)
+    db.session.delete(sim)
+    db.session.commit()
+    print("deleted", ID)
+
 def complete_simulation(simId):
     sim = Simulation.query.get(simId)
     sim.status = "Done"
@@ -46,6 +52,11 @@ def complete_simulation(simId):
 def create_response(timeStart, timeEnd, duration, length, version, path=0):
     r = Response(path, timeStart, timeEnd, duration, length, version)
     db.session.add(r)
+    db.session.commit()
+
+def create_heatpoint(lng,lat,version):
+    h = HeatPoint(lng,lat,version)
+    db.session.add(h)
     db.session.commit()
 
 def get_all_sims():

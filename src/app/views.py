@@ -3,7 +3,6 @@ from flask import request
 from app import app
 from app.postgresdb import *
 # from app.tigerdb import get_shortest_path, get_all_resources, get_num_responses,get_num_transfers, get_avg_response_time
-from app.functions import get_reposnses_per_week
 from app.sumo import run, save_controller, Controller
 
 @app.route("/")
@@ -51,10 +50,15 @@ def getAvgResponseTime():
 
 @app.route("/api/runSimulation")
 def runSimulations():
-    simID, activities = run()
-    sort_output(simID)
-    print(activities)
-    return str(simID)
+    simID, success = run()
+    print(simID, success)
+    if (success):
+        complete_simulation(simID)
+        sort_output(simID)
+    else: 
+        remove_simulation(simID)
+        print("Sadness")
+    return {'id': str(simID), 'success': success}
 
 @app.route("/api/saveSettings", methods=['POST'])
 def saveSettings():

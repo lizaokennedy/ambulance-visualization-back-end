@@ -32,18 +32,21 @@ class Simulation(db.Model):
     def __repr__(self, sim_start, sim_end, year, status):
         return f"<Simulation {self.status}>"
 
-
-class Path(db.Model):
-    __tablename__ = 'Path'
+class HeatPoint(db.Model):
+    __tablename__ = 'Heatpoint'
 
     id = db.Column('id', db.Integer, primary_key=True)
-    path = db.Column('Path', db.ARRAY(Text), primary_key=False)
+    lng = db.Column('longitude', db.Float, primary_key=False)
+    lat = db.Column('latitude', db.Float, primary_key=False)
+    version = db.Column('version', db.Integer, primary_key=False)
 
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, lng, lat, version):
+        self.lng = lng
+        self.lat = lat
+        self.version = version
 
-    def __repr__(self, path):
-        return f"<Path {self.id}>"
+    def __repr__(self, lng, lat, version):
+        return f"<HeatPoint {self.lng}, {self.lat}>"
 
 
 class Response(db.Model):

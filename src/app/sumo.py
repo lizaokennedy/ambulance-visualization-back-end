@@ -25,26 +25,31 @@ def run(randomGeneration=True):
     simId = create_simulation(0, c.stop_time, 2020, "Running")
     step = 0
     i = 0
+    c.setID(simId)
     sumoBinary = checkBinary('sumo')
-    traci.start([sumoBinary, "-c", "app/data/blou.sumocfg", "--tripinfo-output", "app/data/tripinfo.xml"])
+    try: 
+        traci.start([sumoBinary, "-c", "app/data/blou.sumocfg", "--tripinfo-output", 
+            "app/data/tripinfo.xml"])
+        while (not stop()):
+            traci.simulationStep()
+            check_for_arrivals()
+            c.get_positions()
 
-    while (not stop()):
-        traci.simulationStep()
-        check_for_arrivals()
+            if randomGeneration :
+                if random() < c.prob:
+                    generate_emergency()
+            else:
+                i = process_emergency(i, step)
+            step += 1
 
-        if randomGeneration :
-            if random() < c.prob:
-                generate_emergency()
-        else:
-            i = process_emergency(i, step)
-        step += 1
-
-    complete_simulation(simId)
-    traci.close()
-    sys.stdout.flush()
-    c = Controller
-    step = 0
-    return simId, activities
+        traci.close()
+        sys.stdout.flush()
+        c = Controller
+        step = 0
+        print(activities)
+        return simId, True
+    except:
+        return simId, False
 
 def save_controller(controller, randomGeneration=True):
     global c
@@ -187,36 +192,37 @@ def add_ambulance(ambuID, src, dest, depotID):
 
 def check_for_arrivals():
     global c, emergencyID, activities
-    pending = 0
+    pending = []
     for key, ambu in c.ambulances.items():
         if (ambu.returning):
-            pending = handle_arrival_depot(ambu)
+            ambuID = handle_arrival_depot(ambu)
+            if ambuID != -1:
+                pending.append(ambuID)
         else:
             handle_arrival_emergency(ambu)
 
-    for i in range(pending):
-        activities += "Respond to waiting Emergency\n"
-        if generate_emergency():
-            c.waiting -= 1
+    for key in pending:
+        ambu = c.ambulances.pop(key)
+        if(c.waiting > 0):
+            activities += "Respond to waiting Emergency\n"
+            if generate_emergency():
+                c.waiting -= 1
 
 
 
 def handle_arrival_depot(ambu):
     global activities
     arrived = traci.edge.getLastStepVehicleIDs(str(ambu.src))
-    pending = 0
     if len(arrived) > 0:
         name = "ambulance" + str(ambu.ambuID)
         if name in arrived:
             depot = c.depots[ambu.depotID]
             c.emergencies_to_process -= 1
             activities += "Arrived at Depot: Ambulance:" + str(ambu.ambuID) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
-            if (c.waiting > 0):
-                pending += 1
-
             depot.receive_ambulance()
             traci.vehicle.remove(name)
-    return pending
+            return ambu.ambuID
+    return -1
 
 def handle_arrival_emergency(ambu):
     global activities

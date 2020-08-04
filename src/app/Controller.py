@@ -2,10 +2,16 @@ import traci
 from app.Ambulance import Ambulance 
 from app.Emergency import Emergency
 from app.Depot import Depot
+from app.postgresdb import create_heatpoint
+import sumolib
+import os
+
 
 class Controller:
 
     def __init__(self):
+        self.net = sumolib.net.readNet(os.path.abspath('app/data/blou.net.xml'))
+        self.outData = []
         self.depots = []
         self.emergencies = []
         self.ambulances = {}
@@ -13,6 +19,7 @@ class Controller:
         self.emergencies_to_process = 0
         self.stop_time = 0
         self.prob = 0
+        self.simId = 0
 
     def parse_data(self, data, randomGeneration=True):  
         if not randomGeneration:
@@ -35,7 +42,8 @@ class Controller:
         self.stop_time = int(data['time'])
         self.prob = int(data['avgEmergencies'])/24/60/60
         
-        
+    def setID(self, simID):
+        self.simId = simID
 
     def get_dummy_data(self):
         return {
@@ -48,3 +56,19 @@ class Controller:
             "time": 500,
             "avgEmergencies": 500
         }
+
+    def get_positions(self):
+        for key, ambu in self.ambulances.items():
+            name = "ambulance" + str(ambu.ambuID)
+            try:
+                pos = traci.vehicle.getPosition(name)
+                if not (pos[0] == -1073741824.0 or pos[1] == -1073741824.0):
+                    lng, lat = self.net.convertXY2LonLat(pos[0], pos[1])
+                    create_heatpoint(lng, lat, self.simId)
+                    # self.outData.append({'position': [lng, lat], 'weight': 1 })
+            except:
+                return
+            
+
+
+
