@@ -12,8 +12,8 @@ def sort_output(simID):
     root = out.getroot()
     for child in root.findall('tripinfo'):
         if "ambulance" in child.attrib['id']:
+            print(child.attrib['id'])
             create_response(child.attrib['depart'], child.attrib['arrival'], child.attrib['duration'], child.attrib['routeLength'], simID)
-            # print(child.attrib['depart'])
 
 
 def exists(fromNode, toNode):

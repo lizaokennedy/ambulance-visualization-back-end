@@ -41,7 +41,8 @@ def run(randomGeneration=True):
             else:
                 i = process_emergency(i, step)
             step += 1
-
+            
+        traci.simulationStep()
         traci.close()
         sys.stdout.flush()
         c = Controller
@@ -140,7 +141,7 @@ def add_emergency(e1, e2, depotID):
         activities += "Generated Ambulance:" + str(emergencyID) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
     except (ex.TraCIException, ex.FatalTraCIError):
         traci.vehicle.remove("ambulance" + str(emergencyID))
-        print("ERROR")
+        print("ERROR: removing ambulance " + str(emergencyID))
         return False
 
     print("Emergency Added - Adding Ambulance:  " + str(emergencyID))
@@ -237,6 +238,7 @@ def handle_arrival_depot(ambu):
                 c.emergencies_to_process -= 1
                 activities += "Arrived at Depot: Ambulance:" + str(ambu.ambuID) + " at TimeStep: " + str(traci.simulation.getTime()) + "\n"
                 depot.receive_ambulance()
+                print("ambulance " + str(ambu.ambuID))
                 traci.vehicle.remove(name)
                 return ambu.ambuID
         return -1
