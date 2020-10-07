@@ -1,23 +1,36 @@
 # ambulance-visualization-back-end
-To Set up container
-```
-docker run   --name pg-docker -e POSTGRES_PASSWORD=docker -p 5432:5432 -v $HOME/docker/volumes/postgres:/var/lib/postgresql/data  postgres
+First the postgres database must be set up. Follow the instructions in the data repo for the postgres database.
+
+# SQLAlchemy
+
+After the database is set up with the docker container delete the migrations file in the src directory and follow the commands below.
+
+1. Install Sumo using the following command.
+```sh
+sudo apt-get install sumo sumo-tools sumo-doc
 ```
 
-To start container
+2. Initializing the Database
+```sh
+flask db init
 ```
-docker start pg-docker
+3. Then migrate the DB so it reflect your changes
+```sh
+flask db migrate -m "Initial migration."
+```
+4. Once you have made a change update
+```sh
+flask db upgrade
 ```
 
-PGadmin passowrd: docker
+## To run the backend
+```sh
+pip3 install -r requirements.txt
+```
+```sh
+cd src
+```
+```sh
+flask run
+```
 
-Login to pg-docker container
-
-```
-docker exec -it pg-docker /bin/bash
-```
-
-Login to psql
-```
-psql "dbname=postgres host=localhost user=postgres password=docker port=5432"
-```

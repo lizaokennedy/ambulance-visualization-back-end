@@ -57,18 +57,6 @@ class Controller:
             "avgEmergencies": 500
         }
 
-    def get_positions(self):
-        for key, ambu in self.ambulances.items():
-            name = "ambulance" + str(ambu.ambuID)
-            try:
-                pos = traci.vehicle.getPosition(name)
-                if not (pos[0] == -1073741824.0 or pos[1] == -1073741824.0):
-                    lng, lat = self.net.convertXY2LonLat(pos[0], pos[1])
-                    create_heatpoint(lng, lat, self.simId)
-                    # self.outData.append({'position': [lng, lat], 'weight': 1 })
-            except:
-                return
-            
 
 
 

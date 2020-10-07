@@ -39,10 +39,8 @@ def create_simulation(start, end, year, status):
     return s.id
 
 def remove_simulation(ID):
-    sim = db.session.query(Simulation).filter(Simulation.id == ID)
-    db.session.delete(sim)
+    sim = Simulation.query.filter(Simulation.id == ID).delete()
     db.session.commit()
-    print("deleted", ID)
 
 def complete_simulation(simId):
     sim = Simulation.query.get(simId)
@@ -95,7 +93,14 @@ def get_avg_distance(simId=26):
     else:
         return str(total/count/1000)
 
-def get_total_responses(simId=26):
+def get_total_responses(simId):
     total = db.session.query(Response).filter(Response.version == simId).count()
     return str(total)
 
+def get_heatmap_points(simId):
+    data = []
+    points = db.session.query(HeatPoint).filter(HeatPoint.version == simId)
+    for point in points:
+        data.append([point.lng, point.lat])
+
+    return {"points": data}

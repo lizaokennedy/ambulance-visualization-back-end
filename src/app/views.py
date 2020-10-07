@@ -2,7 +2,6 @@ from flask.json import jsonify
 from flask import request
 from app import app
 from app.postgresdb import *
-# from app.tigerdb import get_shortest_path, get_all_resources, get_num_responses,get_num_transfers, get_avg_response_time
 from app.sumo import run, save_controller, Controller
 
 @app.route("/")
@@ -46,6 +45,8 @@ def getNumTransfers():
 def getAvgResponseTime():
     data = request.json
     simID = data["simID"]
+    
+    get_heatmap_points(simID)
     return get_avg_response_time(simID)
 
 @app.route("/api/runSimulation")
@@ -57,7 +58,6 @@ def runSimulations():
         sort_output(simID)
     else: 
         remove_simulation(simID)
-        print("Sadness")
     return {'id': str(simID), 'success': success}
 
 @app.route("/api/saveSettings", methods=['POST'])
@@ -70,4 +70,15 @@ def saveSettings():
     data = 0
     return "Success"
 
+@app.route("/api/getHeatmapPoints", methods=['POST'])
+def getHeatmapPoints():
+    data = request.json
+    simID = data["simID"]
+    return get_heatmap_points(simID)
 
+
+@app.route("/api/removeSimulation", methods=['POST'])
+def removeSimulation():
+    data = request.json
+    simID = data["simID"]
+    return remove_simulation(simID)
