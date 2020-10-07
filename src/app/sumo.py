@@ -10,7 +10,7 @@ from app.Controller import Controller
 from app.Ambulance import Ambulance 
 from app.Emergency import Emergency
 from app.Depot import Depot
-from app.postgresdb import create_simulation, complete_simulation, create_heatpoint
+from app.postgresdb import create_simulation, create_heatpoint
 
 
 def get_options():
@@ -41,7 +41,7 @@ def run(randomGeneration=True):
             else:
                 i = process_emergency(i, step)
             step += 1
-            
+
         traci.simulationStep()
         traci.close()
         sys.stdout.flush()
@@ -108,6 +108,9 @@ def generate_emergency():
             return success
     except Exception as e:
         print("Gen Emergency" , str(e))
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
         return False
 
 def get_edge_random():
