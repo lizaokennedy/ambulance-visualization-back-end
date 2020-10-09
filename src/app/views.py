@@ -3,6 +3,7 @@ from flask import request
 from app import app
 from app.postgresdb import *
 from app.sumo import run, save_controller, Controller
+from app.Optimize import *
 
 @app.route("/")
 def hello():
@@ -82,3 +83,8 @@ def removeSimulation():
     data = request.json
     simID = data["simID"]
     return remove_simulation(simID)
+
+@app.route("/api/optimize")
+def optimize():
+    fitness, pos = Optimize.run(Optimize)
+    return {'Fitness': fitness, 'Position': pos}

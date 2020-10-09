@@ -41,7 +41,7 @@ def run(randomGeneration=True):
             else:
                 i = process_emergency(i, step)
             step += 1
-
+            
         traci.simulationStep()
         traci.close()
         sys.stdout.flush()
