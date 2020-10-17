@@ -1,104 +1,112 @@
 # Create ps
-# Create swarm
-# Initialoze swarm
+# Create population
+# Initialoze population
 # Run alogoritm
 #
 # Create function
 #
-import random
-from app.Particle import Particle
-
+from random import randint, random
+from app.Individual import Individual
+from sklearn.svm import SVR
 
 class Optimize:
-    swarm = []
-    g_best_position = []
-    g_best_fitness = []
+    population = []
+    best_individual = None
     num_runs = 1
     iterations = 2000
-    swarm_size = 35
-    c1 = 1.4
-    c2 = 1.4
-    w = 0.7
-# todo must be editable
+    population_size = 20
+    # todo must be editable
     max_ambu = 5  # constraint
     num_depots = 3  # dimention
     max_x = 8
     min_x = 0
+    cross_prob = 0.7
+    mutate_prob = 0.15
 
     def run(self):
+        # 5 * population size
+        # hard_eval for each indiv
+        # create svm from pop_size best individuals
+
+
         for i in range(self.num_runs):
-            self.init_swarm(self)
-            self.g_best_position = self.swarm[0].best_position
-            self.g_best_fitness = self.swarm[0].best_fitness
-
-            # run PSO
+            
+            self.init_population(self)
             for i in range(self.iterations):
-                for j in range(len(self.swarm)):
-                    curr_fitness = self.swarm[j].curr_fitness
-                    if curr_fitness < self.swarm[j].best_fitness:
-                        self.update_personal_best(self.swarm[j])
+                new_population = []
+                for j in range(len(self.population)):
+                    new_population.append(self.create_offspring())
 
-                    if self.swarm[j].best_fitness < self.g_best_fitness:
-                        self.g_best_position = self.swarm[j].best_position
-                        self.g_best_fitness = self.swarm[j].best_fitness
-
-                for j in range(len(self.swarm)):
-                    self.update_velocity(self, self.swarm[j])
-                    self.update_position(self, self.swarm[j])
+                self.best_individual = self.select_population(new_population)
 
         print("Global best fitness : " + str(self.g_best_fitness))
         print("Global best position : ", self.g_best_position)
         return str(self.g_best_fitness), self.g_best_position
 
-    def update_personal_best(self, p):
-        curr_fitness = p.curr_fitness
+    def select_population(self, new_population):
+        return
 
-        if (self.is_feasible(p)):
-            p.best_fitness = curr_fitness
-            p.best_position = p.curr_position
+    def create_offspring(self):
+        # create new individual by applying mutation operator
+        p1 = self.population[randint(0, len(self.population) - 1)]
+        p2 = self.population[randint(0, len(self.population) - 1)]
 
-    def update_position(self, p):
-     # todo calc fitness and update
-        for i in range(self.num_depots):
-            p.curr_position[i] = p.curr_position[i] + p.velocity[i]
+        c1, c2 = self.crossover(p1, p2)
+        self.mutate(c1)
+        self.mutate(c2)
 
-    def update_velocity(self, p):
-        for i in range(self.num_depots):
-            r1 = random.random()
-            r2 = random.random()
-            p.velocity[i] = self.w * p.velocity[i] + self.c1 * r1 * \
-                (p.best_position[i] - p.curr_position[i]) + self.c2 * \
-                 r2 * (self.g_best_position[i] - p.curr_position[i])
+        self.easy_eval(c1)
+        self.easy_eval(c2)
 
-    # todo must fix function to be accurate for simulation
-    def get_fitness(p):
-        fitness = 0
-        for i in range(len(p.curr_position)):
-            fitness += p.curr_position[i]*2
-
-        return fitness
-
-    def is_feasible(self, p):
-        count = 0
-        for i in range(len(p.curr_position)):
-            count += p.curr_position[i]
-
-        if count < self.max_ambu:
-            return True
+        if c1.fitness < c2.fitness:
+            return c1
         else:
-            return False
+            return c2
 
-    def init_swarm(self):
-        for i in range(self.swarm_size):
-            self.swarm.append(Particle(self.get_fitness, self.max_ambu, self.num_depots))
+    def crossover(self, p1, p2):
+        c1 = p1.clone()
+        c2 = p2.clone()
+        for i in range(len(p1.position)):
+            if random() < self.cross_prob:
+                temp = c1.position[i]
+                c1.position[i] = c2.position[i]
+                c2.position[i] = temp
 
+        return c1, c2
 
+    def mutate(self, c):
+        for i in range(len(c.position)):
+            if random() < self.mutate_prob:
+                if random() < 0.5:
+                    c.position[i] += random()*(self.max_x - c.position[i])
+                else: 
+                    c.position[i] += random()*(c.position[i] - self.min_x)
 
+        return c
 
+    def easy_eval(self, c):
+        c.set_fitness(self.svm.predict(c.position))
 
+    def expensive_eval(self):
+        # set fitness score
+        # call sumo
+        return
 
+    def select_population(self, new_population):
+        sortedList = sorted(self.population + new_population, key=lambda x : x.fitness)
+        return sortedList[:self.population_size]
 
+    def init_population(self):
+        start_population = []
+        positions = []
+        fitnesses = []
+        for i in range(self.population_size * 5):
+            start_population.append(Individual(self.max_ambu, self.num_depots))
+            start_population[i].set_fitness(self.expensive_eval(start_population[i]))
+            positions.append(start_population[i].position)
+            fitnesses[i].append(start_population[i].fitness)
 
+        self.svm = SVR()
+        self.svm.fit(positions, fitnesses)
 
-
-
+        self.population = self.select_population(start_population)

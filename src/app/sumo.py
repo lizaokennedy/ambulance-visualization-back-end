@@ -11,15 +11,15 @@ from app.Ambulance import Ambulance
 from app.Emergency import Emergency
 from app.Depot import Depot
 from app.postgresdb import create_simulation, create_heatpoint
-
-
+# only check for arrivals if there are 
+# add flag for when running optimization so dont add heatpoints to db
 def get_options():
     opt_parser = optparse.OptionParser()
     opt_parser.add_option("--nogui", action="store_true", default=False, help="run the commandline version of sumo")
     options, args = opt_parser.parse_args()
     return options
 
-def run(randomGeneration=True):
+def run(randomGeneration=True, optimization=False):
     global step, c, activities
     activities = ""
     simId = create_simulation(0, c.stop_time, 2020, "Running")
@@ -32,8 +32,10 @@ def run(randomGeneration=True):
             "app/data/tripinfo.xml"])
         while (not stop()):
             traci.simulationStep()
-            check_for_arrivals()
-            get_positions()
+            if c.emergencies_to_process > 0:
+                check_for_arrivals()
+            if (not optimization):
+                get_positions()
 
             if randomGeneration :
                 if random() < c.prob:
@@ -117,14 +119,17 @@ def get_edge_random():
     edges = traci.edge.getIDList()
     return choice(edges)
 
-def stop(randomGeneration=True):
+def stop(randomGeneration=True, optimization=True):
     if randomGeneration:
         # if c.stop_time <= traci.simulation.getTime() and c.emergencies_to_process <= 0:
         if c.stop_time <= traci.simulation.getTime():
             c.prob = 0
-            if(c.emergencies_to_process <= 0):
-                print(traci.simulation.getTime(), c.emergencies_to_process)
+            if optimization:
                 return True
+            else:
+                if(c.emergencies_to_process <= 0):
+                    print(traci.simulation.getTime(), c.emergencies_to_process)
+                    return True
     else:
         if (c.emergencies_to_process <= 0):
             return True
