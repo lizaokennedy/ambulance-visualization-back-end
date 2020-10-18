@@ -86,5 +86,6 @@ def removeSimulation():
 
 @app.route("/api/optimize")
 def optimize():
+    print("HIBICHECs")
     fitness, pos = Optimize.run(Optimize)
     return {'Fitness': fitness, 'Position': pos}
