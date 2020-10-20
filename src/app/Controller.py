@@ -19,6 +19,7 @@ class Controller:
         self.emergencies_to_process = 0
         self.stop_time = 0
         self.prob = 0
+        self.prob_static = 0
         self.simId = 0
 
     def parse_data(self, data, randomGeneration=True):  
@@ -41,7 +42,14 @@ class Controller:
         
         self.stop_time = int(data['time'])
         self.prob = int(data['avgEmergencies'])/24/60/60
-        
+        self.prob_static = self.prob
+        self.static_depots = self.depots
+
+
+    def load_data(self, individual):
+        for i in range(len(individual.position)): 
+            self.depots[i].set_amubs(individual.position[i])
+            
     def setID(self, simID):
         self.simId = simID
 

@@ -11,7 +11,7 @@ from app.Individual import Individual
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
-
+from app.sumo import run
 
 class Optimize:
     population = []
@@ -20,17 +20,18 @@ class Optimize:
     iterations = 2000
     population_size = 30
     # todo must be editable
-    max_ambu = 20 # constraint
-    num_depots = 7  # dimention
+    max_ambu = 10 # constraint
+    num_depots = 3  # dimention
     max_x = 8
     min_x = 0
     cross_prob = 0.7
     mutate_prob = 0.15
     penalty = 30*max_ambu
-    retrain_prob = 0.002
+    retrain_prob = 0.000
     retrain_count = 0
 
     def run(self):
+        # setup controller
         for n in range(self.num_runs):
             self.init_population()
             print("Starting population")
@@ -38,7 +39,6 @@ class Optimize:
                 print(i.fitness, i.position)
             print()
             for i in range(self.iterations):
-                # print(i)
                 if random() < self.retrain_prob:
                     self.trainSVM()
                     self.retrain_count += 1
@@ -109,15 +109,17 @@ class Optimize:
         return c.fitness
 
     def expensive_eval(self, c):
-        # check feasibility
-        # set fitness score
-        # call sumo
         fitness = 0
         if not self.is_feasible(c.position):
             fitness = self.penalty
 
-        for i in range(1, len(c.position) + 1):
-            fitness += (c.position[i-1])**2
+        for i in range(len(c.position)):
+            # number ambulances
+            fitness += c.position[i]
+        
+        # print(run(optimization=True))
+        fitness += float(run(optimization=True, individual=c))
+        print("Pos: ",c.position, "Fitness: ", fitness)
 
         c.set_fitness(fitness)
         return fitness
