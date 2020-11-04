@@ -22,12 +22,16 @@ def get_options():
 def run(randomGeneration=True, individual=None, optimization=False):
     global step, c, activities
     activities = ""
-    simId = create_simulation(0, c.stop_time, 2020, "Running")
+    if not optimization:
+        simId = create_simulation(0, c.stop_time, 2020, "Running")
+    else:
+        c.load_data(individual)
+        simId = -1
     step = 0
     i = 0
     c.setID(simId)
     sumoBinary = checkBinary('sumo')
-    c.load_data(individual)
+    
     try: 
         traci.start([sumoBinary, "-c", "app/data/blou.sumocfg", "--tripinfo-output", 
             "app/data/tripinfo.xml"])
