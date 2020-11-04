@@ -1,13 +1,16 @@
+sudo: false
 language: python
-python:
-  - 3.8
-
+python: 3.8
 cache:
   directories:
     - __pycache__
     - env
+# Install the codecov pip dependency
+install:
+  - pip install codecov
+# Run the unit test
 script:
+  - coverage run tests.py
   - python3.8 -m unittest discover
 after_success:
-  - export CODECOV_TOKEN="token"
-  - bash <(curl -s https://codecov.io/bash)
+  - codecov
