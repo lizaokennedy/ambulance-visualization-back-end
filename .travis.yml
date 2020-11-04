@@ -10,7 +10,7 @@ install:
   - pip install codecov
 # Run the unit test
 script:
-  - coverage run /tests/unit/tests.py
+  - coverage run /tests/unit/test.py
   - python3.8 -m unittest discover
 after_success:
   - codecov
