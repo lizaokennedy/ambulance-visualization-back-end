@@ -21,6 +21,8 @@ class Controller:
         self.prob = 0
         self.prob_static = 0
         self.simId = 0
+        self.num_depots = 0
+        self.num_ambulances = 0
 
     def parse_data(self, data, randomGeneration=True):  
         if not randomGeneration:
@@ -35,11 +37,15 @@ class Controller:
             self.emergencies = sorted(self.emergencies, key=lambda x: x.time)
 
         counter = 0
+        ambus = 0
         for h in data['depots']: 
             newH = Depot(counter, h["coordinate"][1], h["coordinate"][0], int(h["ambulances"]))
+            ambus += int(h["ambulances"])
             self.depots.append(newH)
             counter += 1
-        
+
+        self.num_depots = counter
+        self.num_ambulances = ambus
         self.stop_time = int(data['time'])
         self.prob = int(data['avgEmergencies'])/24/60/60
         self.prob_static = self.prob
