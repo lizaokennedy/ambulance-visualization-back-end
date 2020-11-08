@@ -1,5 +1,0 @@
-*.xml filter=lfs diff=lfs merge=lfs -text
-*.sumocfg filter=lfs diff=lfs merge=lfs -text
-*/optparse filter=lfs diff=lfs merge=lfs -text
-*.netccfg filter=lfs diff=lfs merge=lfs -text
-*.csv filter=lfs diff=lfs merge=lfs -text
