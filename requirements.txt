@@ -12,6 +12,7 @@ Flask==1.1.1
 Flask-Cors==3.0.8
 Flask-Migrate==2.5.3
 Flask-SQLAlchemy==2.4.1
+Flask-Testing==0.8.0
 idna==2.9
 itsdangerous==1.1.0
 Jinja2==2.11.1
@@ -20,6 +21,7 @@ Mako==1.1.2
 MarkupSafe==1.1.1
 matplotlib==3.2.0
 node==0.9.24
+nose2==0.9.2
 numpy==1.18.1
 odict==1.7.0
 plumber==1.5
