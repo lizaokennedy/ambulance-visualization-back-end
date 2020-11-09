@@ -64,6 +64,10 @@ def run(randomGeneration=True, individual=None, optimization=False):
             return simId, True
     except Exception as e:
         print(str(e))
+        if optimization:
+            traci.close()
+            c.prob = c.prob_static
+            return run(optimization=True, individual=individual)
         return simId, False
 
 def save_controller(controller, randomGeneration=True):

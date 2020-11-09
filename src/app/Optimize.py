@@ -61,6 +61,7 @@ class Optimize:
             print(self.best_individual.fitness)
             for i in self.population:
                 print(i.fitness, i.position)
+
         print("Retrained", self.retrain_count, "Times")
         print("Global best fitness : " + str(self.best_individual.fitness))
         print("Global best position : ", self.best_individual.position)
@@ -119,10 +120,12 @@ class Optimize:
 
         for i in range(len(c.position)):
             # number ambulances
+            c.position[i] = round(c.position[i])
             fitness += c.position[i]
+
         
         # print(run(optimization=True))
-        fitness += float(run(optimization=True, individual=c))
+        fitness += self.max_ambu *float(run(optimization=True, individual=c))
         print("Pos: ",c.position, "Fitness: ", fitness)
 
         c.set_fitness(fitness)
