@@ -2,14 +2,18 @@ from logging import error
 import unittest
 import sys
 import os
+import requests
 from flask_cors import CORS
 from app import app
 sys.path.insert(0, 'src/app')
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from unittest import TestCase as Base
+from app.Controller import Controller
+from app.Optimize import run
 
-from app.postgresdb import create_simulation, remove_simulation, complete_simulation
+
+from app.postgresdb import *
 from app.model import Simulation, Response, HeatPoint, db, setup
 # from app import model
 
@@ -80,6 +84,15 @@ class TestModel(TestCase):
         db.session.commit()
         assert sim.id == id
 
+    # def test_pg_complete_simulation(self):
+    #     sim = Simulation(0,0,0,"0")
+    #     db.session.add(sim)
+    #     db.session.commit()
+    #     id = sim.id 
+    #     complete_simulation(id)
+    #     response = Simulation.query.filter(Simulation.id == id)
+    #     assert not response.status == None
+
     def test_pg_remove_simulation(self):
         sim = Simulation(0,0,0,0)
         db.session.add(sim)
@@ -88,17 +101,25 @@ class TestModel(TestCase):
         id = sim.id
         response = Simulation.query.filter(Simulation.id == id)
         assert "SELECT" in str(response)
+    
+    def test_pg_create_response(self):
+        id = create_response(0,0,0,0,0)
+        r = Response.query.get(id)
+        db.session.commit()
+        assert r.id == id
 
-    # def test_pg_complete_simulation(self):
-    #     sim = Simulation(0,0,0,"0")
-    #     db.session.add(sim)
-    #     db.session.commit()
-    #     id = sim.id + 1
-    #     print("id: " ,id)
-    #     complete_simulation(id)
-    #     response = Simulation.query.filter(Simulation.id == id)
-    #     # print(response.status)
-    #     assert response.status == "Done"
+    def test_pg_create_heatpoint(self):
+        id = create_heatpoint(0,0,0)
+        h = HeatPoint.query.get(id)
+        db.session.commit()
+        assert h.id == id
+
+    def test_pg_get_all_sims(self):
+        sims = get_all_sims()
+        assert not sims == None
+
+    def test_simulation():
+        c = Controller()
 
 if __name__ == "__main__":
     unittest.main()
