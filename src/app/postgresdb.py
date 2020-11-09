@@ -1,4 +1,5 @@
 from flask import Flask
+from sqlalchemy.sql.elements import True_
 from app import app
 from app.model import db, Simulation, RoadSegment, Response, HeatPoint
 from flask.json import jsonify
@@ -44,18 +45,23 @@ def remove_simulation(ID):
 
 def complete_simulation(simId):
     sim = Simulation.query.get(simId)
-    sim.status = "Done"
-    db.session.commit()
+    try:
+        sim.status = "Done"
+        db.session.commit()
+    except Exception as e:
+        return True
 
 def create_response(timeStart, timeEnd, duration, length, version, path=0):
     r = Response(path, timeStart, timeEnd, duration, length, version)
     db.session.add(r)
     db.session.commit()
+    return r.id
 
 def create_heatpoint(lng,lat,version):
     h = HeatPoint(lng,lat,version)
     db.session.add(h)
     db.session.commit()
+    return h.id
 
 def get_all_sims():
     sims = db.session.query(Simulation)
