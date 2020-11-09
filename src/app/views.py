@@ -90,5 +90,5 @@ def optimize():
     c = Controller()
     c.parse_data(data)
     save_controller(c)
-    fitness, pos = Optimize().run()
+    fitness, pos = Optimize().run(c)
     return {'Fitness': fitness, 'Position': pos}

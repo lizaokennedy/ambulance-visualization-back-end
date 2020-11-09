@@ -7,6 +7,7 @@
 #
 from operator import pos
 from random import randint, random
+
 from app.Individual import Individual
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
@@ -20,18 +21,22 @@ class Optimize:
     iterations = 2000
     population_size = 30
     # todo must be editable
-    max_ambu = 10 # constraint
-    num_depots = 3  # dimention
+    max_ambu = 0# constraint
+    num_depots = 0 # dimention
     max_x = 8
     min_x = 0
     cross_prob = 0.7
     mutate_prob = 0.15
-    penalty = 30*max_ambu
+    penalty = 0
     retrain_prob = 0.000
     retrain_count = 0
 
-    def run(self):
+    def run(self, c):
         # setup controller
+        self.max_ambu = c.num_ambulances
+        self.num_depots = c.num_depots
+        self.penalty = 30*self.max_ambu
+
         for n in range(self.num_runs):
             self.init_population()
             print("Starting population")
@@ -71,8 +76,8 @@ class Optimize:
         self.mutate(c1)
         self.mutate(c2)
 
-        self.expensive_eval(c1)
-        self.expensive_eval(c2)
+        self.easy_eval(c1)
+        self.easy_eval(c2)
 
         if c1.fitness < c2.fitness:
             return c1
@@ -97,12 +102,11 @@ class Optimize:
                     c.position[i] += random()*(self.max_x - c.position[i])
                 else: 
                     c.position[i] += random()*(c.position[i] - self.min_x)
-
         return c
 
     def easy_eval(self, c):
         # check feasibility
-        if not self.is_feasible(c.position):
+        if not self.is_feasible(c.position) or self.num_ambulances(c.position) < 1:
             c.set_fitness(self.svm.predict([c.position])[0] + (self.penalty))
         else:
             c.set_fitness(self.svm.predict([c.position])[0])
@@ -124,6 +128,11 @@ class Optimize:
         c.set_fitness(fitness)
         return fitness
       
+    def num_ambulances(self, pos):
+        total = 0
+        for p in pos:
+            total += p
+        return total
 
     def select_population(self, new_population):
         sortedList = sorted(new_population, key=lambda x : x.fitness)
@@ -140,7 +149,7 @@ class Optimize:
         start_population = []
         positions = []
         fitnesses = []
-        for i in range(self.population_size * 10):
+        for i in range(self.population_size * 5):
             start_population.append(Individual(self.max_ambu, self.num_depots))
             self.expensive_eval(start_population[i])
             positions.append(start_population[i].position)
