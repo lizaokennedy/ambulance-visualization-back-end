@@ -34,3 +34,11 @@ cd src
 flask run
 ```
 
+# To run tests
+
+```sh
+cd src
+```
+```sh
+nose2 -v app.tests.unit.test --with-coverage
+```

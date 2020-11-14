@@ -9,7 +9,7 @@ import os
 
 class Controller:
 
-    def __init__(self):
+    def __init__(self, optimization=False):
         self.net = sumolib.net.readNet(os.path.abspath('app/data/blou.net.xml'))
         self.outData = []
         self.depots = []
@@ -23,26 +23,23 @@ class Controller:
         self.simId = 0
         self.num_depots = 0
         self.num_ambulances = 0
+        self.optimization = optimization
 
     def parse_data(self, data, randomGeneration=True):  
-        if not randomGeneration:
-            counter = 0
-            data = self.get_dummy_data()
-            for e in data['emergency']:
-                newEm = Emergency(counter, e["long"], e["lat"], e["time"])
-                self.emergencies.append(newEm)
-                counter += 1
-
-            self.emergencies_to_process = counter + 1
-            self.emergencies = sorted(self.emergencies, key=lambda x: x.time)
-
         counter = 0
         ambus = 0
-        for h in data['depots']: 
-            newH = Depot(counter, h["coordinate"][1], h["coordinate"][0], int(h["ambulances"]))
-            ambus += int(h["ambulances"])
-            self.depots.append(newH)
-            counter += 1
+        if self.optimization:
+            ambus += int(data["ambulances"])
+            for h in data['depots']: 
+                newH = Depot(counter, h["coordinate"][1], h["coordinate"][0], 0)
+                self.depots.append(newH)
+                counter += 1
+        else: 
+            for h in data['depots']: 
+                newH = Depot(counter, h["coordinate"][1], h["coordinate"][0], int(h["ambulances"]))
+                ambus += int(h["ambulances"])
+                self.depots.append(newH)
+                counter += 1
 
         self.num_depots = counter
         self.num_ambulances = ambus
