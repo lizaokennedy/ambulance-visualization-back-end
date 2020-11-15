@@ -1,7 +1,7 @@
 from flask import Flask
 from sqlalchemy.sql.elements import True_
 from app import app
-from app.model import db, Simulation, RoadSegment, Response, HeatPoint
+from app.model import db, Simulation, Response, HeatPoint, Optimization, Depot
 from flask.json import jsonify
 import json
 from sqlalchemy import func, and_
@@ -17,20 +17,20 @@ def sort_output(simID):
             create_response(child.attrib['depart'], child.attrib['arrival'], child.attrib['duration'], child.attrib['routeLength'], simID)
 
 
-def exists(fromNode, toNode):
-    exists = db.session.query(RoadSegment).filter(and_(RoadSegment.fromNode == fromNode, RoadSegment.toNode == toNode))
-    # length = db.session.query(RoadSegment).count()
-    occurences = exists.count()
-    if (occurences > 0):
-        return True
-    else:
-        return False
+# def exists(fromNode, toNode):
+#     exists = db.session.query(RoadSegment).filter(and_(RoadSegment.fromNode == fromNode, RoadSegment.toNode == toNode))
+#     # length = db.session.query(RoadSegment).count()
+#     occurences = exists.count()
+#     if (occurences > 0):
+#         return True
+#     else:
+#         return False
      
-def updateFrequency(fromNode, toNode):
-    segment = db.session.query(RoadSegment).filter(and_(RoadSegment.fromNode == fromNode, RoadSegment.toNode == toNode)).first()
-    segment.frequency += 1
-    db.session.commit()
-    return segment
+# def updateFrequency(fromNode, toNode):
+#     segment = db.session.query(RoadSegment).filter(and_(RoadSegment.fromNode == fromNode, RoadSegment.toNode == toNode)).first()
+#     segment.frequency += 1
+#     db.session.commit()
+#     return segment
 
 
 def create_simulation(start, end, year, status):
@@ -39,17 +39,32 @@ def create_simulation(start, end, year, status):
     db.session.commit()
     return s.id
 
+def create_optimization():
+    opt = Optimization(response_time=0, status="Running")
+    db.session.add(opt)
+    db.session.commit()
+    return opt.id
+
+def remove_optimization(ID):
+    opt = Optimization.query.filter(Simulation.id == ID).delete()
+    db.session.commit()
+
+def complete_optimization(ID, response_time):
+    opt = Optimization.query.get(simId)
+    opt.status = "Done"
+    opt.response_time = response_time
+    db.session.merge(opt)
+    db.session.commit()
+
 def remove_simulation(ID):
     sim = Simulation.query.filter(Simulation.id == ID).delete()
     db.session.commit()
 
 def complete_simulation(simId):
     sim = Simulation.query.get(simId)
-    try:
-        sim.status = "Done"
-        db.session.commit()
-    except Exception as e:
-        return True
+    sim.status = "Done"
+    db.session.merge(sim)
+    db.session.commit()
 
 def create_response(timeStart, timeEnd, duration, length, version, path=0):
     r = Response(path, timeStart, timeEnd, duration, length, version)

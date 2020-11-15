@@ -68,6 +68,12 @@ def removeSimulation():
     simID = data["simID"]
     return remove_simulation(simID)
 
+@app.route("/api/removeOptimization", methods=['POST'])
+def removeOptimization():
+    data = request.json
+    optID = data["optID"]
+    return remove_optimization(optID)
+
 @app.route("/api/runOptimization", methods=['POST'])
 def optimize():
     data = request.json
@@ -75,5 +81,7 @@ def optimize():
     c = Controller(optimization=True)
     c.parse_data(data)
     save_controller(c)
-    fitness, pos = Optimize().run(c)
-    return {'Fitness': fitness, 'Position': pos}
+    success = Optimize().run(c)
+    if (not success):
+        remove_simulation(simID)
+    return {'success': success}

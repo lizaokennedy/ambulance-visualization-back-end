@@ -12,6 +12,7 @@ from app.Individual import Individual
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
+from app.model import complete_optimization, create_optimization
 from app.sumo import run
 
 class Optimize:
@@ -33,6 +34,7 @@ class Optimize:
 
     def run(self, c):
         # setup controller
+        optID = create_optimization()
         self.max_ambu = c.num_ambulances
         self.num_depots = c.num_depots
         self.penalty = 30*self.max_ambu
@@ -62,11 +64,10 @@ class Optimize:
             for i in self.population:
                 print(i.fitness, i.position)
 
-        print("Retrained", self.retrain_count, "Times")
-        print("Global best fitness : " + str(self.best_individual.fitness))
-        print("Global best position : ", self.best_individual.position)
-        print("Actual Fitness:", self.expensive_eval(self.best_individual))
-        return str(self.best_individual.fitness),self.best_individual.position
+        actualFitness = self.expensive_eval(self.best_individual)
+        depots = self.best_individual.position
+        complete_optimization(optID, actualFitness, depots)
+        return True
 
     def create_offspring(self):
         # create new individual by applying mutation operator

@@ -32,6 +32,7 @@ class Simulation(db.Model):
     def __repr__(self, sim_start, sim_end, year, status):
         return f"<Simulation {self.status}>"
 
+
 class HeatPoint(db.Model):
     __tablename__ = 'Heatpoint'
 
@@ -59,7 +60,6 @@ class Response(db.Model):
     duration = db.Column('Duration', db.Float, primary_key=False)
     length = db.Column('Length', db.Float, primary_key=False)
 
-
     def __init__(self, path, timeStart, timeEnd, duration, length, version):
         self.path = path
         self.timeStart = timeStart
@@ -72,20 +72,35 @@ class Response(db.Model):
         return f"<Response {self.timeStart}>"
 
 
-class RoadSegment(db.Model):
-    __tablename__ = 'RoadSegment'
+class Optimization(db.Model):
+    __tablename__ = 'Optimization'
 
     id = db.Column('id', db.Integer, primary_key=True)
-    fromNode = db.Column('From', db.Integer, primary_key=False)
-    toNode = db.Column('To', db.Float, primary_key=False)
-    frequency = db.Column('Frequency', db.Float, primary_key=False)
+    status = db.Column('Status', db.Text, primary_key=False)
+    response_time = db.Column('Response_time', db.Float, primary_key=False)
+
+    def __init__(self, status, response_time):
+        self.status = status
+        self.response_time = response_time
+
+    def __repr__(self, status, response_time,):
+        return f"<Optimization {self.status} - {self.response_time}>"
 
 
-    def __init__(self, fromNode, toNode, frequency):
-        self.fromNode = fromNode
-        self.toNode = toNode
-        self.frequency = frequency
+class Depot(db.Model):
+    __tablename__ = 'Depot'
 
-    def __repr__(self, fromNode, toNode, frequency):
-        return f"<RoadSegment {self.fromNode} - {self.toNode}: {self.frequency}>"
+    id = db.Column('id', db.Integer, primary_key=True)
+    lng = db.Column('lng', db.Float, primary_key=False)
+    lat = db.Column('lat', db.Float, primary_key=False)
+    ambulances = db.Column('ambulances', db.Float, primary_key=False)
+    version = db.Column('version', db.Integer, primary_key=False)
 
+    def __init__(self, lng, lat, ambulances, version):
+        self.lng = lng
+        self.lat = lat
+        self.ambulances = ambulances
+        self.version = version
+
+    def __repr__(self, lng, lat, ambulances, version):
+        return f"<Depot {self.lng}, {self.lat}. {self.ambulances}>"
