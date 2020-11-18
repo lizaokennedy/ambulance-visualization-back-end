@@ -49,11 +49,15 @@ def remove_optimization(ID):
     opt = Optimization.query.filter(Simulation.id == ID).delete()
     db.session.commit()
 
-def complete_optimization(ID, response_time):
-    opt = Optimization.query.get(simId)
+def complete_optimization(ID, response_time, depots):
+    opt = Optimization.query.get(ID)
     opt.status = "Done"
     opt.response_time = response_time
     db.session.merge(opt)
+    # add to db
+    for d in depots:
+        d = Depot(lng=d.long, lat=d.lat, ambulances=d.ambulances, version=ID)
+        db.session.add(d)
     db.session.commit()
 
 def remove_simulation(ID):
@@ -88,6 +92,19 @@ def get_all_sims():
 
     simulations = jsonify({"sims": jsonSims})
     return simulations
+
+def get_all_opts():
+    opts = db.session.query(Simulation)
+    length = db.session.query(Simulation).count()
+    jsonOpts = []
+    print("Hello")
+    for i in range(length):
+        jsonOpts.append({"id": opts[i].id, "status": opts[i].status, "response_time": opts[i].response_time})
+        print(opts[i].id)
+    # optimizations = jsonify({"optimizations": jsonOpts})
+    optimizations = jsonify({"optimizations": [{"id": 0, "status": "done", "response_time": 3}]})
+    return optimizations
+
 
 def get_avg_response_time(simId=26):
     responses = db.session.query(Response).filter(Response.version == simId)

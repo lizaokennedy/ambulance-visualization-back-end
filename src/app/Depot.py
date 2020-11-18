@@ -15,7 +15,7 @@ class Depot:
     def set_edge(self, edgeID):
         self.edgeID = str(edgeID)
 
-    def set_amubs(self, ambus):
+    def set_ambulances(self, ambus):
         self.ambulances = ambus
         
     def dispatch_ambulance(self):

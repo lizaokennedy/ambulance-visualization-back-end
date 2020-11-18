@@ -12,7 +12,7 @@ from app.Individual import Individual
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
-from app.model import complete_optimization, create_optimization
+from app.postgresdb import complete_optimization, create_optimization
 from app.sumo import run
 
 class Optimize:
@@ -31,10 +31,13 @@ class Optimize:
     penalty = 0
     retrain_prob = 0.000
     retrain_count = 0
+    multiply_factor = 2
 
     def run(self, c):
         # setup controller
-        optID = create_optimization()
+        # optID = create_optimization()
+        # complete_optimization(optID, 2,self.getDepotsDict(c, [1,2,3]))
+        
         self.max_ambu = c.num_ambulances
         self.num_depots = c.num_depots
         self.penalty = 30*self.max_ambu
@@ -65,9 +68,19 @@ class Optimize:
                 print(i.fitness, i.position)
 
         actualFitness = self.expensive_eval(self.best_individual)
-        depots = self.best_individual.position
+        depots = self.getDepotsDict(c, self.best_individual.position)
         complete_optimization(optID, actualFitness, depots)
+
         return True
+
+
+    def getDepotsDict(self, c, ambus_list):
+        count = 0
+        for d in c.depots:
+            d.set_ambulances(ambus_list[count])
+            print("AMBU: " ,ambus_list[count])
+            count += 1
+        return c.depots
 
     def create_offspring(self):
         # create new individual by applying mutation operator
@@ -153,7 +166,7 @@ class Optimize:
         start_population = []
         positions = []
         fitnesses = []
-        for i in range(self.population_size * 5):
+        for i in range(self.population_size * self.multiply_factor):
             start_population.append(Individual(self.max_ambu, self.num_depots))
             self.expensive_eval(start_population[i])
             positions.append(start_population[i].position)

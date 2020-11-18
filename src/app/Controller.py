@@ -51,7 +51,7 @@ class Controller:
 
     def load_data(self, individual):
         for i in range(len(individual.position)): 
-            self.depots[i].set_amubs(individual.position[i])
+            self.depots[i].set_ambulances(individual.position[i])
             
     def setID(self, simID):
         self.simId = simID

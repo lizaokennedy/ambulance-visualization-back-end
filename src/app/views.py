@@ -15,6 +15,11 @@ def getAllSimulations():
     sims = get_all_sims()
     return sims
 
+@app.route("/api/getAllOptimizations")
+def getAllOptimizations():
+    opts = get_all_opts()
+    return opts
+
 @app.route("/api/getNumResponses",  methods=['POST'])
 def getNumResponses():
     data = request.json
