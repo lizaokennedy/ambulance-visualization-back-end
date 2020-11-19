@@ -46,7 +46,7 @@ def create_optimization():
     return opt.id
 
 def remove_optimization(ID):
-    opt = Optimization.query.filter(Simulation.id == ID).delete()
+    opt = Optimization.query.filter(Optimization.id == ID).delete()
     db.session.commit()
 
 def complete_optimization(ID, response_time, depots):
@@ -94,15 +94,13 @@ def get_all_sims():
     return simulations
 
 def get_all_opts():
-    opts = db.session.query(Simulation)
-    length = db.session.query(Simulation).count()
+    opts = db.session.query(Optimization)
+    length = db.session.query(Optimization).count()
     jsonOpts = []
-    print("Hello")
     for i in range(length):
         jsonOpts.append({"id": opts[i].id, "status": opts[i].status, "response_time": opts[i].response_time})
-        print(opts[i].id)
-    # optimizations = jsonify({"optimizations": jsonOpts})
-    optimizations = jsonify({"optimizations": [{"id": 0, "status": "done", "response_time": 3}]})
+        print(opts[i].response_time)
+    optimizations = jsonify({"optimizations": jsonOpts})    
     return optimizations
 
 

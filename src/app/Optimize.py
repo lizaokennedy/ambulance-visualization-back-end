@@ -20,7 +20,7 @@ class Optimize:
     best_individual = None
     num_runs = 1
     iterations = 2000
-    population_size = 30
+    population_size = 15
     # todo must be editable
     max_ambu = 0# constraint
     num_depots = 0 # dimention
@@ -31,11 +31,11 @@ class Optimize:
     penalty = 0
     retrain_prob = 0.000
     retrain_count = 0
-    multiply_factor = 2
+    multiply_factor = 1
 
     def run(self, c):
         # setup controller
-        # optID = create_optimization()
+        optID = create_optimization()
         # complete_optimization(optID, 2,self.getDepotsDict(c, [1,2,3]))
         
         self.max_ambu = c.num_ambulances
@@ -67,10 +67,12 @@ class Optimize:
             for i in self.population:
                 print(i.fitness, i.position)
 
+        # ADD this as an actual simulation
         actualFitness = self.expensive_eval(self.best_individual)
+        actualFitness = (actualFitness/self.max_ambu) - (self.num_ambulances(self.best_individual.position)/2)
+        print(actualFitness)
         depots = self.getDepotsDict(c, self.best_individual.position)
         complete_optimization(optID, actualFitness, depots)
-
         return True
 
 
@@ -135,7 +137,7 @@ class Optimize:
         for i in range(len(c.position)):
             # number ambulances
             c.position[i] = round(c.position[i])
-            fitness += c.position[i]
+            fitness += c.position[i]*0.5
 
         
         # print(run(optimization=True))

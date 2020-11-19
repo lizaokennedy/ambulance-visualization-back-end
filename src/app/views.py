@@ -40,8 +40,13 @@ def getAvgResponseTime():
     get_heatmap_points(simID)
     return get_avg_response_time(simID)
 
-@app.route("/api/runSimulation")
+@app.route("/api/runSimulation", methods=['POST'])
 def runSimulations():
+    data = request.json
+    print(data)
+    c = Controller()
+    c.parse_data(data)
+    save_controller(c)
     simID, success = run()
     print(simID, success)
     if (success):
