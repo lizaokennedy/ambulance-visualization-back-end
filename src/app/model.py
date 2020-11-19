@@ -91,12 +91,14 @@ class Depot(db.Model):
     __tablename__ = 'Depot'
 
     id = db.Column('id', db.Integer, primary_key=True)
+    localID = db.Column('localID', db.Integer, primary_key=False)
     lng = db.Column('lng', db.Float, primary_key=False)
     lat = db.Column('lat', db.Float, primary_key=False)
     ambulances = db.Column('ambulances', db.Float, primary_key=False)
     version = db.Column('version', db.Integer, primary_key=False)
 
-    def __init__(self, lng, lat, ambulances, version):
+    def __init__(self, localID, lng, lat, ambulances, version):
+        self.localID = localID
         self.lng = lng
         self.lat = lat
         self.ambulances = ambulances

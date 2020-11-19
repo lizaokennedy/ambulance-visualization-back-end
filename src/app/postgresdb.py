@@ -1,3 +1,4 @@
+from re import L
 from flask import Flask
 from sqlalchemy.sql.elements import True_
 from app import app
@@ -55,9 +56,11 @@ def complete_optimization(ID, response_time, depots):
     opt.response_time = response_time
     db.session.merge(opt)
     # add to db
+    count = 1 
     for d in depots:
-        d = Depot(lng=d.long, lat=d.lat, ambulances=d.ambulances, version=ID)
+        d = Depot(localID=count, lng=d.long, lat=d.lat, ambulances=d.ambulances, version=ID)
         db.session.add(d)
+        count += 1
     db.session.commit()
 
 def remove_simulation(ID):
@@ -103,6 +106,13 @@ def get_all_opts():
     optimizations = jsonify({"optimizations": jsonOpts})    
     return optimizations
 
+def get_depots(optID):
+    depots = db.session.query(Depot).filter(Depot.version == optID)
+    jsonDepots = []
+    for depot in depots:
+        jsonDepots.append({"id": depot.localID, "lng": depot.lng, "lat": depot.lat, "ambulances": depot.ambulances})
+    depots = jsonify({"depots": jsonDepots})    
+    return depots
 
 def get_avg_response_time(simId=26):
     responses = db.session.query(Response).filter(Response.version == simId)
@@ -115,6 +125,10 @@ def get_avg_response_time(simId=26):
         return str(0)
     else:
         return str(total/count/60)
+
+def get_opt_response_time(optID): 
+    opt = db.session.query(Optimization).filter(Optimization.id == optID).first()
+    return str(opt.response_time)
 
     
 def get_avg_distance(simId=26):

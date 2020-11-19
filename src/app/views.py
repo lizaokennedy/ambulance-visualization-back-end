@@ -20,6 +20,14 @@ def getAllOptimizations():
     opts = get_all_opts()
     return opts
 
+
+@app.route("/api/getDepots", methods=['POST'])
+def getDepots():
+    data = request.json
+    optID = data["optID"]
+    depots = get_depots(optID)
+    return depots
+
 @app.route("/api/getNumResponses",  methods=['POST'])
 def getNumResponses():
     data = request.json
@@ -36,9 +44,14 @@ def getNumTransfers():
 def getAvgResponseTime():
     data = request.json
     simID = data["simID"]
-    
-    get_heatmap_points(simID)
     return get_avg_response_time(simID)
+
+@app.route("/api/getOptResponseTime", methods=['POST'])
+def getOptResponseTime():
+    data = request.json
+    optID = data["optID"]
+    return get_opt_response_time(optID)
+
 
 @app.route("/api/runSimulation", methods=['POST'])
 def runSimulations():
