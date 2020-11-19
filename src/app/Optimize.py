@@ -131,7 +131,7 @@ class Optimize:
 
     def expensive_eval(self, c):
         fitness = 0
-        if not self.is_feasible(c.position):
+        if not self.is_feasible(c.position) or self.num_ambulances(c.position) < 1:
             fitness = self.penalty
 
         for i in range(len(c.position)):
